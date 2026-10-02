@@ -2,6 +2,7 @@ import axios from 'axios'
 import type {
   AnalysisResult,
   GradCAMResult,
+  SHAPResult,
   SegmentationResult,
   ChatSource,
   LesionAnnotation,
@@ -47,6 +48,11 @@ export async function runClassification(
 
 export async function fetchGradCAM(analysisId: string): Promise<GradCAMResult> {
   const res = await client.post<GradCAMResult>(`/api/v1/analyses/${analysisId}/explanation`)
+  return res.data
+}
+
+export async function fetchSHAP(analysisId: string): Promise<SHAPResult> {
+  const res = await client.post<SHAPResult>(`/api/v1/analyses/${analysisId}/shap`)
   return res.data
 }
 

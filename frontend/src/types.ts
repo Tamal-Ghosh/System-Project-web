@@ -59,6 +59,17 @@ export interface GradCAMResult {
   generated_at: string
 }
 
+export interface SHAPResult {
+  analysis_id: string
+  original_image_url: string
+  overlay_image_url: string
+  target_class: string
+  explanation_method: string
+  positive_attr_pct: number
+  negative_attr_pct: number
+  generated_at: string
+}
+
 export interface SegmentationResult {
   analysis_id: string
   mask_url: string

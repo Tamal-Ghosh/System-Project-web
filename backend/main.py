@@ -196,6 +196,43 @@ class GradCAM:
 target_layer = model.backbone.layer4[-1].conv3
 grad_cam = GradCAM(model, target_layer)
 
+# ─── SHAP (Shapley Additive exPlanations) Implementation ───────────────────────
+def compute_shapley_attribution(model, input_tensor, target_class=None, steps=12):
+    model.eval()
+    if target_class is None:
+        with torch.no_grad():
+            target_class = model(input_tensor).argmax(dim=1).item()
+
+    baseline = torch.zeros_like(input_tensor)
+    alphas = torch.linspace(0.0, 1.0, steps, device=input_tensor.device)
+    scaled_inputs = torch.cat([baseline + alpha * (input_tensor - baseline) for alpha in alphas], dim=0)
+    scaled_inputs.requires_grad = True
+
+    outputs = model(scaled_inputs)
+    target_outputs = outputs[:, target_class]
+    grads = torch.autograd.grad(torch.unbind(target_outputs), scaled_inputs)[0]
+    avg_grads = torch.mean(grads, dim=0, keepdim=True)
+
+    shapley_values = ((input_tensor - baseline) * avg_grads).squeeze(0).cpu().detach().numpy()
+    shapley_map = np.sum(shapley_values, axis=0) # shape (224, 224)
+
+    # Calculate evidence breakdown: positive vs negative attribution
+    pos_sum = float(np.sum(np.maximum(shapley_map, 0)))
+    neg_sum = float(np.sum(np.maximum(-shapley_map, 0)))
+    total_abs = pos_sum + neg_sum + 1e-10
+    pos_pct = round((pos_sum / total_abs) * 100, 1)
+    neg_pct = round((neg_sum / total_abs) * 100, 1)
+
+    # Normalize map to [-1, 1]
+    abs_max = max(abs(shapley_map.min()), abs(shapley_map.max())) + 1e-8
+    norm_map = shapley_map / abs_max
+
+    # Colormap: 0-255 where 128 is baseline 0, warm colors (>128) are positive, cool colors (<128) are negative
+    heatmap_255 = np.uint8(np.clip((norm_map + 1.0) / 2.0 * 255, 0, 255))
+    shap_colormap = cv2.applyColorMap(heatmap_255, cv2.COLORMAP_JET)
+
+    return shap_colormap, pos_pct, neg_pct, target_class
+
 # ─── Transforms (Matching HAM10000 Training) ──────────────────────────────────
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
@@ -253,6 +290,16 @@ class GradCAMResponse(BaseModel):
     overlay_image_url: str
     target_class: str
     explanation_method: str
+    generated_at: str
+
+class SHAPResponse(BaseModel):
+    analysis_id: str
+    original_image_url: str
+    overlay_image_url: str
+    target_class: str
+    explanation_method: str
+    positive_attr_pct: float
+    negative_attr_pct: float
     generated_at: str
 
 class SegmentationResponse(BaseModel):
@@ -565,6 +612,36 @@ def get_explanation(analysis_id: str):
         "generated_at": datetime.utcnow().isoformat() + "Z",
     }
 
+@app.post("/api/v1/analyses/{analysis_id}/shap", response_model=SHAPResponse)
+def get_shap_explanation(analysis_id: str):
+    record = analyses_db.get(analysis_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Analysis not found.")
+
+    img_tensor = record["img_tensor"]
+    top_idx = record["top_class_idx"]
+    img_cv = record["img_cv"]
+
+    shap_colormap, pos_pct, neg_pct, _ = compute_shapley_attribution(model, img_tensor, target_class=top_idx)
+
+    orig_resized = cv2.resize(img_cv, (224, 224))
+    shap_overlay = cv2.addWeighted(orig_resized, 0.45, shap_colormap, 0.55, 0)
+
+    shap_filename = f"{analysis_id}_shap.png"
+    shap_path = os.path.join(ARTIFACTS_DIR, shap_filename)
+    cv2.imwrite(shap_path, shap_overlay)
+
+    return {
+        "analysis_id": analysis_id,
+        "original_image_url": record["image_url"],
+        "overlay_image_url": f"/artifacts/{shap_filename}",
+        "target_class": record["predicted_class_display"],
+        "explanation_method": "SHAP (Path-Integrated Shapley Values)",
+        "positive_attr_pct": pos_pct,
+        "negative_attr_pct": neg_pct,
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+    }
+
 @app.post("/api/v1/analyses/{analysis_id}/segmentation")
 def run_segmentation_endpoint(analysis_id: str):
     record = analyses_db.get(analysis_id)
@@ -667,6 +744,13 @@ def chat(req: ChatRequest):
             "Grad-CAM (Gradient-weighted Class Activation Mapping) computes the gradients of the top predicted class score "
             "with respect to the final convolutional feature maps (`layer4[-1].conv3`). This produces a heatmap visualizing which lesion regions "
             "most heavily influenced the network's prediction."
+        )
+    elif "shap" in q or "shapley" in q or "attribution" in q:
+        content = (
+            "**SHAP (SHapley Additive exPlanations)** calculates cooperative game-theoretic feature attributions for every pixel.\n\n"
+            "• **Positive Shapley values (Red/Warm):** Pixels actively supporting the predicted lesion class (e.g. atypical pigment network, irregular globules).\n"
+            "• **Negative Shapley values (Blue/Cool):** Pixels pulling the model away from this class towards normal skin or alternative differentials.\n"
+            "• **Difference from Grad-CAM:** While Grad-CAM provides coarse convolutional activations from `layer4`, SHAP computes fine-grained, axiomatic pixel-level attributions across the input space."
         )
     else:
         content = (

@@ -116,13 +116,14 @@ export function ChatAssistant({ analysis, onClearAnalysis }: Props) {
         'Why did the model predict this class?',
         'What does the uncertainty score mean?',
         'Explain the Grad-CAM regions for this lesion',
+        'Explain the SHAP attributions for this lesion',
         'What clinical limitations should I consider?',
       ]
     : [
         'How does ResNet50 classify skin lesions?',
         'What does model calibration (ECE) mean?',
+        'What is the difference between Grad-CAM and SHAP?',
         'Explain the ABCDE criteria in dermatoscopy',
-        'What are the limitations of AI skin models?',
       ]
 
   return (

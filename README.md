@@ -24,9 +24,10 @@ DermaInsight AI is a modern clinical decision-support web application for dermat
    - **Separation Margin:** Probability difference between top prediction and runner-up.
    - **Clinical Reliability Tiers:** Dynamic categorization into `High`, `Moderate`, or `Low` reliability with evidence-based recommendations.
 
-3. **Explainable AI (Grad-CAM)**
-   - High-resolution visual explanation extracted from ResNet50's final convolutional layer (`layer4[-1].conv3`).
-   - Interactive dual-view comparison and smooth opacity slider.
+3. **Explainable AI (Dual Engine: Grad-CAM & SHAP)**
+   - **Grad-CAM (Convolutional Localization):** Visual explanation extracted from ResNet50's final convolutional layer (`layer4[-1].conv3`), highlighting macroscopic feature regions influencing predictions.
+   - **SHAP (Game-Theoretic Feature Attribution):** Path-Integrated Shapley Additive exPlanations measuring pixel-level cooperative game theory attributions. Breaks down into **Positive Supporting Evidence (%)** and **Negative Counter-Evidence (%)** with custom diverging colormap overlays.
+   - Interactive dual-view comparison and real-time opacity controls for both explainability methods.
 
 4. **Lesion Boundary Segmentation & Morphometrics**
    - Adaptive Otsu thresholding with morphological boundary smoothing.

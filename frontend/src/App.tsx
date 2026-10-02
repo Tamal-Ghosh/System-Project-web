@@ -18,6 +18,7 @@ import { ImageAnnotationCanvas } from './components/ImageAnnotationCanvas'
 import { PredictionCard } from './components/PredictionCard'
 import { ReliabilityCard } from './components/ReliabilityCard'
 import { GradCAMSection } from './components/GradCAMSection'
+import { SHAPSection } from './components/SHAPSection'
 import { SegmentationSection } from './components/SegmentationSection'
 import { ChatAssistant } from './components/ChatAssistant'
 
@@ -314,6 +315,7 @@ export default function App() {
                 <PredictionCard result={result} />
                 <ReliabilityCard info={result.reliability} />
                 <GradCAMSection result={result} />
+                <SHAPSection result={result} />
                 <SegmentationSection result={result} />
               </div>
             )}
