@@ -2,6 +2,7 @@ import os
 import uuid
 import math
 import io
+import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
@@ -13,10 +14,19 @@ from PIL import Image
 import numpy as np
 import cv2
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+# ─── SHAP Engine (real Partition SHAP, Steps 4-8) ────────────────────────────
+try:
+    from shap_engine import PartitionSHAPEngine, BUDGET_PRESETS
+    SHAP_AVAILABLE = True
+    logging.info("[OK] SHAP engine loaded successfully (Partition SHAP + ImageMasker).")
+except ImportError as _shap_err:
+    SHAP_AVAILABLE = False
+    logging.warning(f"[WARNING] SHAP library not available: {_shap_err}. Falling back to Integrated Gradients.")
 
 # ─── Directories Setup ────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -161,6 +171,16 @@ else:
 model.to(DEVICE)
 model.eval()
 
+# ─── Initialise Partition SHAP Engine (Steps 4–8) ────────────────────────────
+shap_engine: Optional["PartitionSHAPEngine"] = None
+if SHAP_AVAILABLE:
+    try:
+        shap_engine = PartitionSHAPEngine(model, DEVICE)
+        logging.info("[OK] PartitionSHAPEngine initialised.")
+    except Exception as _e:
+        logging.warning(f"[WARNING] Could not initialise PartitionSHAPEngine: {_e}")
+        SHAP_AVAILABLE = False
+
 # ─── Grad-CAM Implementation ──────────────────────────────────────────────────
 class GradCAM:
     def __init__(self, model, target_layer):
@@ -297,9 +317,46 @@ class SHAPResponse(BaseModel):
     original_image_url: str
     overlay_image_url: str
     target_class: str
+    target_class_idx: int
     explanation_method: str
     positive_attr_pct: float
     negative_attr_pct: float
+    pred_prob: float
+    budget: str
+    masking: str
+    elapsed_s: float
+    generated_at: str
+    shap_available: bool
+
+class SHAPClassItem(BaseModel):
+    class_idx: int
+    class_code: str
+    class_display: str
+    pred_prob: float
+    positive_attr_pct: float
+    negative_attr_pct: float
+    overlay_image_url: str
+    elapsed_s: float
+
+class SHAPAllClassesResponse(BaseModel):
+    analysis_id: str
+    original_image_url: str
+    classes: List[SHAPClassItem]
+    budget: str
+    masking: str
+    generated_at: str
+
+class SHAPReliabilityResponse(BaseModel):
+    analysis_id: str
+    target_class: str
+    target_class_idx: int
+    consistency_score: float
+    perturbation_delta: float
+    orig_prob: float
+    perturbed_prob: float
+    budget_comparison: List[Dict[str, Any]]
+    masking_comparison: List[Dict[str, Any]]
+    interpretation: str
     generated_at: str
 
 class SegmentationResponse(BaseModel):
@@ -612,34 +669,224 @@ def get_explanation(analysis_id: str):
         "generated_at": datetime.utcnow().isoformat() + "Z",
     }
 
-@app.post("/api/v1/analyses/{analysis_id}/shap", response_model=SHAPResponse)
-def get_shap_explanation(analysis_id: str):
+@app.post("/api/v1/analyses/{analysis_id}/shap")
+def get_shap_explanation(
+    analysis_id: str,
+    budget: str = "medium",
+    masking: str = "blur",
+    target_class_idx: Optional[int] = None,
+):
+    """
+    Step 4–6: Configure Partition SHAP, compute attributions for one class,
+    and return a rendered heatmap overlay.
+
+    Query params
+    ------------
+    budget          : "fast" (200) | "medium" (500) | "thorough" (1000)
+    masking         : "blur" | "inpaint" | "constant"
+    target_class_idx: override which class to explain (default = predicted class)
+    """
     record = analyses_db.get(analysis_id)
     if not record:
         raise HTTPException(status_code=404, detail="Analysis not found.")
 
-    img_tensor = record["img_tensor"]
-    top_idx = record["top_class_idx"]
-    img_cv = record["img_cv"]
+    img_cv  = record["img_cv"]
+    top_idx = target_class_idx if target_class_idx is not None else record["top_class_idx"]
 
-    shap_colormap, pos_pct, neg_pct, _ = compute_shapley_attribution(model, img_tensor, target_class=top_idx)
+    # ── Real Partition SHAP path ──────────────────────────────────────────────
+    if SHAP_AVAILABLE and shap_engine is not None:
+        try:
+            result  = shap_engine.explain(img_cv, target_class=top_idx, budget=budget, masking=masking)
+            overlay, pos_pct, neg_pct = shap_engine.render_heatmap(img_cv, result["shap_values"])
+            pred_prob  = result["pred_prob"]
+            elapsed    = result["elapsed_s"]
+            method     = f"Partition SHAP (budget={budget}, mask={masking})"
+        except Exception as exc:
+            logging.warning(f"Partition SHAP failed ({exc}), falling back to Integrated Gradients.")
+            SHAP_AVAILABLE_local = False
+        else:
+            SHAP_AVAILABLE_local = True
+    else:
+        SHAP_AVAILABLE_local = False
 
-    orig_resized = cv2.resize(img_cv, (224, 224))
-    shap_overlay = cv2.addWeighted(orig_resized, 0.45, shap_colormap, 0.55, 0)
+    # ── Integrated Gradients fallback ────────────────────────────────────────
+    if not SHAP_AVAILABLE or shap_engine is None or not SHAP_AVAILABLE_local:
+        img_tensor = record["img_tensor"]
+        shap_colormap, pos_pct, neg_pct, _ = compute_shapley_attribution(
+            model, img_tensor, target_class=top_idx
+        )
+        orig_resized = cv2.resize(img_cv, (224, 224))
+        overlay  = cv2.addWeighted(orig_resized, 0.45, shap_colormap, 0.55, 0)
+        pred_prob  = float(record["probabilities"][0]["probability"])
+        elapsed    = 0.0
+        method     = "SHAP (Integrated Gradients fallback)"
 
-    shap_filename = f"{analysis_id}_shap.png"
-    shap_path = os.path.join(ARTIFACTS_DIR, shap_filename)
-    cv2.imwrite(shap_path, shap_overlay)
+    shap_filename = f"{analysis_id}_shap_cls{top_idx}_{budget}_{masking}.png"
+    shap_path     = os.path.join(ARTIFACTS_DIR, shap_filename)
+    cv2.imwrite(shap_path, overlay)
+
+    cls_info = HAM10000_CLASSES[top_idx]
+    return {
+        "analysis_id":         analysis_id,
+        "original_image_url":  record["image_url"],
+        "overlay_image_url":   f"/artifacts/{shap_filename}",
+        "target_class":        cls_info["display_name"],
+        "target_class_idx":    top_idx,
+        "explanation_method":  method,
+        "positive_attr_pct":   pos_pct,
+        "negative_attr_pct":   neg_pct,
+        "pred_prob":           round(pred_prob, 4),
+        "budget":              budget,
+        "masking":             masking,
+        "elapsed_s":           elapsed,
+        "generated_at":        datetime.utcnow().isoformat() + "Z",
+        "shap_available":      SHAP_AVAILABLE and shap_engine is not None,
+    }
+
+
+@app.post("/api/v1/analyses/{analysis_id}/shap/all-classes")
+def get_shap_all_classes(
+    analysis_id: str,
+    budget: str = "fast",
+    masking: str = "blur",
+):
+    """
+    Step 7: Generate class-specific SHAP explanations for all 7 HAM10000
+    classes using the same image.  Uses 'fast' budget by default.
+    """
+    record = analyses_db.get(analysis_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Analysis not found.")
+
+    if not SHAP_AVAILABLE or shap_engine is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Partition SHAP library is not available. Install shap>=0.46.0."
+        )
+
+    img_cv  = record["img_cv"]
+    results = shap_engine.explain_all_classes(img_cv, budget=budget, masking=masking)
+    classes_out = []
+
+    for r in results:
+        cls_idx = r["target_class"]
+        cls_info = HAM10000_CLASSES[cls_idx]
+        overlay, pos_pct, neg_pct = shap_engine.render_heatmap(img_cv, r["shap_values"])
+        fn = f"{analysis_id}_shap_cls{cls_idx}_{budget}_{masking}.png"
+        cv2.imwrite(os.path.join(ARTIFACTS_DIR, fn), overlay)
+        classes_out.append({
+            "class_idx":       cls_idx,
+            "class_code":      cls_info["code"],
+            "class_display":   cls_info["display_name"],
+            "pred_prob":       round(r["pred_prob"], 4),
+            "positive_attr_pct": pos_pct,
+            "negative_attr_pct": neg_pct,
+            "overlay_image_url": f"/artifacts/{fn}",
+            "elapsed_s":       r["elapsed_s"],
+        })
 
     return {
-        "analysis_id": analysis_id,
+        "analysis_id":        analysis_id,
         "original_image_url": record["image_url"],
-        "overlay_image_url": f"/artifacts/{shap_filename}",
-        "target_class": record["predicted_class_display"],
-        "explanation_method": "SHAP (Path-Integrated Shapley Values)",
-        "positive_attr_pct": pos_pct,
-        "negative_attr_pct": neg_pct,
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "classes":            classes_out,
+        "budget":             budget,
+        "masking":            masking,
+        "generated_at":       datetime.utcnow().isoformat() + "Z",
+    }
+
+
+@app.post("/api/v1/analyses/{analysis_id}/shap/reliability")
+def get_shap_reliability(
+    analysis_id: str,
+    masking: str = "blur",
+    target_class_idx: Optional[int] = None,
+):
+    """
+    Step 8: Evaluate reliability of SHAP explanations.
+
+    Returns:
+      - budget_comparison  : overlays + elapsed for fast / medium / thorough
+      - masking_comparison : overlays for blur vs constant masking
+      - consistency_score  : Spearman ρ between fast and medium attribution maps
+      - perturbation_delta : ΔPROBABILITY when top attributed pixels are blurred
+      - interpretation     : human-readable stability verdict
+    """
+    record = analyses_db.get(analysis_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Analysis not found.")
+
+    if not SHAP_AVAILABLE or shap_engine is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Partition SHAP library is not available."
+        )
+
+    img_cv     = record["img_cv"]
+    top_idx    = target_class_idx if target_class_idx is not None else record["top_class_idx"]
+    cls_info   = HAM10000_CLASSES[top_idx]
+
+    report = shap_engine.reliability_assessment(img_cv, target_class=top_idx, masking=masking)
+
+    # Render and save overlays for budget comparison
+    budget_out = []
+    for bkey, bdata in report["budget_comparison"].items():
+        overlay, pos_pct, neg_pct = shap_engine.render_heatmap(img_cv, bdata["shap_values"])
+        fn = f"{analysis_id}_shap_rel_{bkey}_{masking}.png"
+        cv2.imwrite(os.path.join(ARTIFACTS_DIR, fn), overlay)
+        budget_out.append({
+            "budget":           bkey,
+            "overlay_url":      f"/artifacts/{fn}",
+            "elapsed_s":        bdata["elapsed_s"],
+            "pred_prob":        round(bdata["pred_prob"], 4),
+            "positive_attr_pct": pos_pct,
+            "negative_attr_pct": neg_pct,
+        })
+
+    # Render and save overlays for masking comparison
+    masking_out = []
+    for mkey, mdata in report["masking_comparison"].items():
+        overlay, pos_pct, neg_pct = shap_engine.render_heatmap(img_cv, mdata["shap_values"])
+        fn = f"{analysis_id}_shap_rel_mask_{mkey}.png"
+        cv2.imwrite(os.path.join(ARTIFACTS_DIR, fn), overlay)
+        masking_out.append({
+            "masking":          mkey,
+            "overlay_url":      f"/artifacts/{fn}",
+            "elapsed_s":        mdata["elapsed_s"],
+            "positive_attr_pct": pos_pct,
+            "negative_attr_pct": neg_pct,
+        })
+
+    # Human-readable interpretation (Step 8)
+    rho   = report["consistency_score"]
+    delta = report["perturbation_delta"]
+    if rho >= 0.80:
+        stability = "High consistency (ρ ≥ 0.80): fast and medium budget maps agree well."
+    elif rho >= 0.60:
+        stability = "Moderate consistency (0.60 ≤ ρ < 0.80): increase budget for more stable maps."
+    else:
+        stability = "Low consistency (ρ < 0.60): explanations are unstable — use higher budget."
+
+    if delta >= 0.10:
+        pert_interp = f"Perturbation test positive (ΔP = {delta:.3f}): blurring top-50% positive regions reduced the predicted probability, suggesting SHAP identified genuinely influential regions."
+    elif delta >= 0:
+        pert_interp = f"Perturbation test weak (ΔP = {delta:.3f}): minor probability change; masked regions may not be the sole drivers or masking creates distribution shift."
+    else:
+        pert_interp = f"Perturbation test negative (ΔP = {delta:.3f}): probability increased after masking; consider alternative masking strategy or interpret cautiously."
+
+    interpretation = f"{stability}  {pert_interp}"
+
+    return {
+        "analysis_id":       analysis_id,
+        "target_class":      cls_info["display_name"],
+        "target_class_idx":  top_idx,
+        "consistency_score": report["consistency_score"],
+        "perturbation_delta": report["perturbation_delta"],
+        "orig_prob":         report["orig_prob"],
+        "perturbed_prob":    report["perturbed_prob"],
+        "budget_comparison": budget_out,
+        "masking_comparison": masking_out,
+        "interpretation":    interpretation,
+        "generated_at":      datetime.utcnow().isoformat() + "Z",
     }
 
 @app.post("/api/v1/analyses/{analysis_id}/segmentation")

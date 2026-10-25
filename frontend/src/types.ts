@@ -64,9 +64,66 @@ export interface SHAPResult {
   original_image_url: string
   overlay_image_url: string
   target_class: string
+  target_class_idx: number
   explanation_method: string
   positive_attr_pct: number
   negative_attr_pct: number
+  pred_prob: number
+  budget: string
+  masking: string
+  elapsed_s: number
+  generated_at: string
+  shap_available: boolean
+}
+
+export interface SHAPClassItem {
+  class_idx: number
+  class_code: string
+  class_display: string
+  pred_prob: number
+  positive_attr_pct: number
+  negative_attr_pct: number
+  overlay_image_url: string
+  elapsed_s: number
+}
+
+export interface SHAPAllClassesResult {
+  analysis_id: string
+  original_image_url: string
+  classes: SHAPClassItem[]
+  budget: string
+  masking: string
+  generated_at: string
+}
+
+export interface SHAPBudgetItem {
+  budget: string
+  overlay_url: string
+  elapsed_s: number
+  pred_prob: number
+  positive_attr_pct: number
+  negative_attr_pct: number
+}
+
+export interface SHAPMaskingItem {
+  masking: string
+  overlay_url: string
+  elapsed_s: number
+  positive_attr_pct: number
+  negative_attr_pct: number
+}
+
+export interface SHAPReliabilityResult {
+  analysis_id: string
+  target_class: string
+  target_class_idx: number
+  consistency_score: number
+  perturbation_delta: number
+  orig_prob: number
+  perturbed_prob: number
+  budget_comparison: SHAPBudgetItem[]
+  masking_comparison: SHAPMaskingItem[]
+  interpretation: string
   generated_at: string
 }
 

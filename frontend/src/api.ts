@@ -3,6 +3,8 @@ import type {
   AnalysisResult,
   GradCAMResult,
   SHAPResult,
+  SHAPAllClassesResult,
+  SHAPReliabilityResult,
   SegmentationResult,
   ChatSource,
   LesionAnnotation,
@@ -51,8 +53,51 @@ export async function fetchGradCAM(analysisId: string): Promise<GradCAMResult> {
   return res.data
 }
 
-export async function fetchSHAP(analysisId: string): Promise<SHAPResult> {
-  const res = await client.post<SHAPResult>(`/api/v1/analyses/${analysisId}/shap`)
+export async function fetchSHAP(
+  analysisId: string,
+  options?: {
+    budget?: 'fast' | 'medium' | 'thorough'
+    masking?: 'blur' | 'inpaint' | 'constant'
+    targetClassIdx?: number
+  }
+): Promise<SHAPResult> {
+  const params: Record<string, string | number> = {}
+  if (options?.budget) params['budget'] = options.budget
+  if (options?.masking) params['masking'] = options.masking
+  if (options?.targetClassIdx !== undefined) params['target_class_idx'] = options.targetClassIdx
+  const res = await client.post<SHAPResult>(
+    `/api/v1/analyses/${analysisId}/shap`,
+    null,
+    { params }
+  )
+  return res.data
+}
+
+export async function fetchSHAPAllClasses(
+  analysisId: string,
+  budget: 'fast' | 'medium' = 'fast',
+  masking: 'blur' | 'constant' = 'blur'
+): Promise<SHAPAllClassesResult> {
+  const res = await client.post<SHAPAllClassesResult>(
+    `/api/v1/analyses/${analysisId}/shap/all-classes`,
+    null,
+    { params: { budget, masking } }
+  )
+  return res.data
+}
+
+export async function fetchSHAPReliability(
+  analysisId: string,
+  masking: 'blur' | 'constant' = 'blur',
+  targetClassIdx?: number
+): Promise<SHAPReliabilityResult> {
+  const params: Record<string, string | number> = { masking }
+  if (targetClassIdx !== undefined) params['target_class_idx'] = targetClassIdx
+  const res = await client.post<SHAPReliabilityResult>(
+    `/api/v1/analyses/${analysisId}/shap/reliability`,
+    null,
+    { params }
+  )
   return res.data
 }
 
