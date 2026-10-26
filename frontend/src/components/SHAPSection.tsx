@@ -1,4 +1,4 @@
-/**
+﻿/**
  * SHAPSection.tsx
  * ──────────────────────────────────────────────────────────────────────────────
  * Full implementation of Steps 4–8 of the SHAP XAI pipeline:
@@ -118,7 +118,7 @@ export function SHAPSection({ result }: Props) {
   const [activeTab, setActiveTab] = useState<ActiveTab>('single')
 
   // Step 4 – configuration
-  const [budget,  setBudget]  = useState<Budget>('medium')
+  const [budget,  setBudget]  = useState<Budget>('fast')
   const [masking, setMasking] = useState<Masking>('blur')
   const [targetClassIdx, setTargetClassIdx] = useState<number>(
     result.probabilities.findIndex(p => p.label === result.predicted_class) >= 0
@@ -237,9 +237,9 @@ export function SHAPSection({ result }: Props) {
               onChange={e => setBudget(e.target.value as Budget)}
               className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
             >
-              <option value="fast">Fast (200 evals) — coarse</option>
-              <option value="medium">Medium (500 evals) — balanced ✓</option>
-              <option value="thorough">Thorough (1000 evals) — detailed</option>
+              <option value="fast">Fast (50 evals) — ~10-15 s ✓</option>
+              <option value="medium">Medium (100 evals) — ~20-35 s</option>
+              <option value="thorough">Thorough (200 evals) — ~45-90 s</option>
             </select>
           </div>
 
@@ -335,7 +335,7 @@ export function SHAPSection({ result }: Props) {
                 </button>
               )}
               <span className="text-xs text-slate-400">
-                {budget === 'fast' ? '~200' : budget === 'medium' ? '~500' : '~1000'} masked evaluations · {masking} masker
+                {budget === 'fast' ? '~50' : budget === 'medium' ? '~100' : '~200'} masked evaluations · {masking} masker
               </span>
             </div>
 
@@ -442,7 +442,7 @@ export function SHAPSection({ result }: Props) {
                 <div className="flex items-start gap-1.5 text-xs text-slate-400">
                   <Info className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" />
                   <span>
-                    Partition SHAP (shap.Explainer + ImageMasker) evaluates ~{budget === 'fast' ? 200 : budget === 'medium' ? 500 : 1000} masked variants.
+                    Partition SHAP evaluates ~{budget === 'fast' ? 50 : budget === 'medium' ? 100 : 200} masked variants on a 56×56 image (upsampled to 224×224). Timeout: 5 min.
                     The masking strategy is <strong>{masking}</strong>. Axiomatic properties: efficiency, symmetry, monotonicity.
                   </span>
                 </div>
@@ -460,7 +460,7 @@ export function SHAPSection({ result }: Props) {
               <p className="font-semibold mb-1">Step 7 — Class-Specific SHAP Explanations</p>
               <p>
                 Generate attribution maps for all 7 HAM10000 classes using the same image.
-                Uses the <strong>fast</strong> budget (200 evals/class) to keep it tractable.
+                Uses the <strong>fast</strong> budget (50 evals/class) to keep it tractable.
                 Compare which regions drive each class's predicted probability.
               </p>
             </div>
@@ -476,7 +476,7 @@ export function SHAPSection({ result }: Props) {
                   ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Running 7 explanations…</>
                   : <><Layers className="w-3.5 h-3.5" /> Explain All 7 Classes</>}
               </button>
-              <span className="text-xs text-slate-400">~7 × 200 evaluations · {masking} masker</span>
+              <span className="text-xs text-slate-400">~7 × 50 evaluations · {masking} masker</span>
             </div>
 
             {errorAll && (

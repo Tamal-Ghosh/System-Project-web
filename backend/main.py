@@ -1,4 +1,4 @@
-import os
+﻿import os
 import uuid
 import math
 import io
@@ -682,7 +682,7 @@ def get_shap_explanation(
 
     Query params
     ------------
-    budget          : "fast" (200) | "medium" (500) | "thorough" (1000)
+    budget          : "fast" (50) | "medium" (100) | "thorough" (200)
     masking         : "blur" | "inpaint" | "constant"
     target_class_idx: override which class to explain (default = predicted class)
     """
@@ -805,7 +805,7 @@ def get_shap_reliability(
     Step 8: Evaluate reliability of SHAP explanations.
 
     Returns:
-      - budget_comparison  : overlays + elapsed for fast / medium / thorough
+      - budget_comparison  : overlays + elapsed for fast / medium
       - masking_comparison : overlays for blur vs constant masking
       - consistency_score  : Spearman ρ between fast and medium attribution maps
       - perturbation_delta : ΔPROBABILITY when top attributed pixels are blurred

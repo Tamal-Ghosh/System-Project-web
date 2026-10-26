@@ -10,8 +10,14 @@ import type {
   LesionAnnotation,
 } from './types'
 
+// General client – 60 s is fine for classification, Grad-CAM, segmentation
 const client = axios.create({
-  timeout: 60000,
+  timeout: 60_000,
+})
+
+// Dedicated SHAP client – Partition SHAP on CPU can take 30–120 s per class
+const shapClient = axios.create({
+  timeout: 300_000,   // 5 minutes
 })
 
 export async function runClassification(
@@ -65,7 +71,7 @@ export async function fetchSHAP(
   if (options?.budget) params['budget'] = options.budget
   if (options?.masking) params['masking'] = options.masking
   if (options?.targetClassIdx !== undefined) params['target_class_idx'] = options.targetClassIdx
-  const res = await client.post<SHAPResult>(
+  const res = await shapClient.post<SHAPResult>(
     `/api/v1/analyses/${analysisId}/shap`,
     null,
     { params }
@@ -78,7 +84,7 @@ export async function fetchSHAPAllClasses(
   budget: 'fast' | 'medium' = 'fast',
   masking: 'blur' | 'constant' = 'blur'
 ): Promise<SHAPAllClassesResult> {
-  const res = await client.post<SHAPAllClassesResult>(
+  const res = await shapClient.post<SHAPAllClassesResult>(
     `/api/v1/analyses/${analysisId}/shap/all-classes`,
     null,
     { params: { budget, masking } }
@@ -93,7 +99,7 @@ export async function fetchSHAPReliability(
 ): Promise<SHAPReliabilityResult> {
   const params: Record<string, string | number> = { masking }
   if (targetClassIdx !== undefined) params['target_class_idx'] = targetClassIdx
-  const res = await client.post<SHAPReliabilityResult>(
+  const res = await shapClient.post<SHAPReliabilityResult>(
     `/api/v1/analyses/${analysisId}/shap/reliability`,
     null,
     { params }
