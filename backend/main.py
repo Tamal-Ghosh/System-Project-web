@@ -1,4 +1,4 @@
-﻿import os
+import os
 import uuid
 import math
 import io
@@ -268,6 +268,8 @@ analyses_db: Dict[str, Dict[str, Any]] = {}
 
 # ─── Pydantic Schemas ─────────────────────────────────────────────────────────
 class ClassProbability(BaseModel):
+    class_idx: Optional[int] = None
+    code: Optional[str] = None
     label: str
     display_name: str
     probability: float
@@ -321,6 +323,7 @@ class SHAPResponse(BaseModel):
     explanation_method: str
     positive_attr_pct: float
     negative_attr_pct: float
+    net_attribution: Optional[float] = None
     pred_prob: float
     budget: str
     masking: str
@@ -335,6 +338,7 @@ class SHAPClassItem(BaseModel):
     pred_prob: float
     positive_attr_pct: float
     negative_attr_pct: float
+    net_attribution: Optional[float] = None
     overlay_image_url: str
     elapsed_s: float
 
@@ -558,6 +562,7 @@ async def create_analysis(
     class_probabilities = []
     for idx in sorted_indices:
         class_probabilities.append({
+            "class_idx": int(idx),
             "code": HAM10000_CLASSES[idx]["code"],
             "label": HAM10000_CLASSES[idx]["label"],
             "display_name": HAM10000_CLASSES[idx]["display_name"],
@@ -625,6 +630,7 @@ async def create_analysis(
 
     return {
         "analysis_id": analysis_id,
+        "top_class_idx": int(top_idx),
         "predicted_class": top_class_label,
         "predicted_class_display": top_class_display,
         "probabilities": class_probabilities,
@@ -697,7 +703,7 @@ def get_shap_explanation(
     if SHAP_AVAILABLE and shap_engine is not None:
         try:
             result  = shap_engine.explain(img_cv, target_class=top_idx, budget=budget, masking=masking)
-            overlay, pos_pct, neg_pct = shap_engine.render_heatmap(img_cv, result["shap_values"])
+            overlay, sig_pos_pct, sig_neg_pct, net_attr, pos_px_pct, neg_px_pct = shap_engine.render_heatmap(img_cv, result["shap_values"])
             pred_prob  = result["pred_prob"]
             elapsed    = result["elapsed_s"]
             method     = f"Partition SHAP (budget={budget}, mask={masking})"
@@ -712,13 +718,14 @@ def get_shap_explanation(
     # ── Integrated Gradients fallback ────────────────────────────────────────
     if not SHAP_AVAILABLE or shap_engine is None or not SHAP_AVAILABLE_local:
         img_tensor = record["img_tensor"]
-        shap_colormap, pos_pct, neg_pct, _ = compute_shapley_attribution(
+        shap_colormap, _fallback_pos, _fallback_neg, _ = compute_shapley_attribution(
             model, img_tensor, target_class=top_idx
         )
         orig_resized = cv2.resize(img_cv, (224, 224))
         overlay  = cv2.addWeighted(orig_resized, 0.45, shap_colormap, 0.55, 0)
         pred_prob  = float(record["probabilities"][0]["probability"])
         elapsed    = 0.0
+        net_attr   = 0.0
         method     = "SHAP (Integrated Gradients fallback)"
 
     shap_filename = f"{analysis_id}_shap_cls{top_idx}_{budget}_{masking}.png"
@@ -735,6 +742,7 @@ def get_shap_explanation(
         "explanation_method":  method,
         "positive_attr_pct":   pos_pct,
         "negative_attr_pct":   neg_pct,
+        "net_attribution":     round(float(net_attr), 4),
         "pred_prob":           round(pred_prob, 4),
         "budget":              budget,
         "masking":             masking,
@@ -771,7 +779,7 @@ def get_shap_all_classes(
     for r in results:
         cls_idx = r["target_class"]
         cls_info = HAM10000_CLASSES[cls_idx]
-        overlay, pos_pct, neg_pct = shap_engine.render_heatmap(img_cv, r["shap_values"])
+        overlay, pos_pct, neg_pct, net_attr = shap_engine.render_heatmap(img_cv, r["shap_values"])
         fn = f"{analysis_id}_shap_cls{cls_idx}_{budget}_{masking}.png"
         cv2.imwrite(os.path.join(ARTIFACTS_DIR, fn), overlay)
         classes_out.append({
@@ -781,6 +789,7 @@ def get_shap_all_classes(
             "pred_prob":       round(r["pred_prob"], 4),
             "positive_attr_pct": pos_pct,
             "negative_attr_pct": neg_pct,
+            "net_attribution":   round(float(net_attr), 4),
             "overlay_image_url": f"/artifacts/{fn}",
             "elapsed_s":       r["elapsed_s"],
         })
@@ -830,7 +839,7 @@ def get_shap_reliability(
     # Render and save overlays for budget comparison
     budget_out = []
     for bkey, bdata in report["budget_comparison"].items():
-        overlay, pos_pct, neg_pct = shap_engine.render_heatmap(img_cv, bdata["shap_values"])
+        overlay, pos_pct, neg_pct, _ = shap_engine.render_heatmap(img_cv, bdata["shap_values"])
         fn = f"{analysis_id}_shap_rel_{bkey}_{masking}.png"
         cv2.imwrite(os.path.join(ARTIFACTS_DIR, fn), overlay)
         budget_out.append({
@@ -845,7 +854,7 @@ def get_shap_reliability(
     # Render and save overlays for masking comparison
     masking_out = []
     for mkey, mdata in report["masking_comparison"].items():
-        overlay, pos_pct, neg_pct = shap_engine.render_heatmap(img_cv, mdata["shap_values"])
+        overlay, pos_pct, neg_pct, _ = shap_engine.render_heatmap(img_cv, mdata["shap_values"])
         fn = f"{analysis_id}_shap_rel_mask_{mkey}.png"
         cv2.imwrite(os.path.join(ARTIFACTS_DIR, fn), overlay)
         masking_out.append({

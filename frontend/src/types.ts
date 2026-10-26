@@ -1,4 +1,5 @@
 export interface ClassProbability {
+  class_idx?: number
   code?: string
   label: string
   display_name: string
@@ -35,6 +36,7 @@ export interface LesionAnnotation {
 
 export interface AnalysisResult {
   analysis_id: string
+  top_class_idx?: number
   predicted_class: string
   predicted_class_display: string
   probabilities: ClassProbability[]
@@ -68,6 +70,7 @@ export interface SHAPResult {
   explanation_method: string
   positive_attr_pct: number
   negative_attr_pct: number
+  net_attribution?: number
   pred_prob: number
   budget: string
   masking: string
@@ -83,6 +86,7 @@ export interface SHAPClassItem {
   pred_prob: number
   positive_attr_pct: number
   negative_attr_pct: number
+  net_attribution?: number
   overlay_image_url: string
   elapsed_s: number
 }

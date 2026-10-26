@@ -231,7 +231,7 @@ class PartitionSHAPEngine:
         img_bgr: np.ndarray,
         shap_values: np.ndarray,
         alpha: float = 0.55,
-    ) -> Tuple[np.ndarray, float, float]:
+    ) -> Tuple[np.ndarray, float, float, float]:
         """
         Composite the SHAP attribution onto the original image.
 
@@ -244,18 +244,30 @@ class PartitionSHAPEngine:
         Returns
         -------
         overlay      : (224, 224, 3) uint8 BGR
-        positive_pct : % of absolute attribution that is positive
-        negative_pct : % of absolute attribution that is negative
+        positive_pct : % of significant attribution that is positive (salient filtered)
+        negative_pct : % of significant attribution that is negative (salient filtered)
+        net_attr     : net sum of attribution values across image
         """
         attribution = np.sum(shap_values, axis=2)   # (224, 224)
+        net_attr = float(np.sum(attribution))
 
-        pos_sum   = float(np.sum(np.maximum(attribution, 0)))
-        neg_sum   = float(np.sum(np.maximum(-attribution, 0)))
-        total_abs = pos_sum + neg_sum + 1e-10
-        pos_pct   = round(pos_sum / total_abs * 100, 1)
-        neg_pct   = round(neg_sum / total_abs * 100, 1)
+        abs_max = max(abs(float(attribution.min())), abs(float(attribution.max()))) + 1e-12
 
-        abs_max  = max(abs(attribution.min()), abs(attribution.max())) + 1e-8
+        # Saliency threshold: filter out background skin noise (< 12% of max magnitude)
+        # to ensure positive/negative evidence percentages represent meaningful features
+        # rather than random zero-centered noise on non-lesion pixels.
+        noise_floor = 0.12 * abs_max
+        sig_pos = float(np.sum(attribution[attribution > noise_floor]))
+        sig_neg = float(np.sum(-attribution[attribution < -noise_floor]))
+        sig_total = sig_pos + sig_neg
+
+        if sig_total > 1e-10:
+            pos_pct = round(sig_pos / sig_total * 100, 1)
+            neg_pct = round(sig_neg / sig_total * 100, 1)
+        else:
+            pos_pct = 50.0
+            neg_pct = 50.0
+
         norm_map = attribution / abs_max
         heat_u8  = np.uint8(np.clip((norm_map + 1.0) / 2.0 * 255, 0, 255))
         heatmap  = cv2.applyColorMap(heat_u8, cv2.COLORMAP_BJET)
@@ -263,7 +275,7 @@ class PartitionSHAPEngine:
         orig_224 = cv2.resize(img_bgr, (224, 224))
         overlay  = cv2.addWeighted(orig_224, 1.0 - alpha, heatmap, alpha, 0)
 
-        return overlay, pos_pct, neg_pct
+        return overlay, pos_pct, neg_pct, net_attr
 
     # ── Step 7: Explain all 7 classes ─────────────────────────────────────────
     def explain_all_classes(

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SHAPSection.tsx
  * ──────────────────────────────────────────────────────────────────────────────
  * Full implementation of Steps 4–8 of the SHAP XAI pipeline:
@@ -51,26 +51,33 @@ const consistencyLabel = (rho: number) =>
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-/** Attribution bar: positive (warm) + negative (cool) */
-function AttrBar({ pos, neg }: { pos: number; neg: number }) {
+/** Attribution bar: positive (warm) + negative (cool) with Net Directional Pull */
+function AttrBar({ pos, neg, net }: { pos: number; neg: number; net?: number }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-xs">
+      <div className="flex items-center justify-between text-xs flex-wrap gap-1">
         <span className="flex items-center gap-1 font-semibold text-rose-600">
-          <TrendingUp className="w-3.5 h-3.5" /> Positive: {pos}%
+          <TrendingUp className="w-3.5 h-3.5" /> Salient Support: {pos}%
         </span>
+        {net !== undefined && (
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 font-mono text-slate-700 font-semibold border border-slate-200" title="Net sum of Shapley attributions (ΔP from baseline)">
+            Net Impact: {net >= 0 ? '+' : ''}{net.toFixed(3)}
+          </span>
+        )}
         <span className="flex items-center gap-1 font-semibold text-sky-600">
-          <TrendingDown className="w-3.5 h-3.5" /> Counter: {neg}%
+          <TrendingDown className="w-3.5 h-3.5" /> Counter-Evidence: {neg}%
         </span>
       </div>
-      <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden flex">
+      <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden flex">
         <div
           className="bg-rose-500 h-full transition-all duration-500"
           style={{ width: `${pos}%` }}
+          title={`Salient positive features: ${pos}%`}
         />
         <div
           className="bg-sky-500 h-full transition-all duration-500"
           style={{ width: `${neg}%` }}
+          title={`Counter-evidence: ${neg}%`}
         />
       </div>
     </div>
@@ -104,7 +111,7 @@ function ClassCard({ item, baseUrl }: { item: SHAPClassItem; baseUrl: string }) 
               className="w-full h-full object-contain"
             />
           </div>
-          <AttrBar pos={item.positive_attr_pct} neg={item.negative_attr_pct} />
+          <AttrBar pos={item.positive_attr_pct} neg={item.negative_attr_pct} net={item.net_attribution} />
           <p className="text-[10px] text-slate-400">Elapsed: {item.elapsed_s}s</p>
         </div>
       )}
@@ -121,9 +128,7 @@ export function SHAPSection({ result }: Props) {
   const [budget,  setBudget]  = useState<Budget>('fast')
   const [masking, setMasking] = useState<Masking>('blur')
   const [targetClassIdx, setTargetClassIdx] = useState<number>(
-    result.probabilities.findIndex(p => p.label === result.predicted_class) >= 0
-      ? result.probabilities.findIndex(p => p.label === result.predicted_class)
-      : 0
+    result.probabilities[0]?.class_idx ?? (result.top_class_idx ?? 0)
   )
   const [opacity, setOpacity] = useState(0.75)
 
@@ -269,11 +274,14 @@ export function SHAPSection({ result }: Props) {
               onChange={e => { setTargetClassIdx(Number(e.target.value)); setShap(null) }}
               className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
             >
-              {result.probabilities.map((p, i) => (
-                <option key={p.label} value={i}>
-                  [{(p.probability * 100).toFixed(1)}%] {p.display_name}
-                </option>
-              ))}
+              {result.probabilities.map((p, i) => {
+                const cIdx = p.class_idx !== undefined ? p.class_idx : i
+                return (
+                  <option key={p.label} value={cIdx}>
+                    [{(p.probability * 100).toFixed(1)}%] {p.display_name}
+                  </option>
+                )
+              })}
             </select>
           </div>
         </div>
@@ -380,12 +388,26 @@ export function SHAPSection({ result }: Props) {
                   )}
                 </div>
 
+                {shap.pred_prob < 0.05 && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+                    <Info className="w-4 h-4 flex-shrink-0 text-amber-600 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">Explaining a Low-Probability Diagnosis ({(shap.pred_prob * 100).toFixed(1)}%)</p>
+                      <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                        The ResNet50 model found minimal evidence for this class on this lesion. 
+                        SHAP values are tiny baseline micro-fluctuations (near 0.00). 
+                        To inspect strong distinguishing features, choose the top predicted diagnosis ({result.predicted_class_display}) in the Step 4 dropdown above.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Step 6 – Attribution bar */}
                 <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                  <AttrBar pos={shap.positive_attr_pct} neg={shap.negative_attr_pct} />
+                  <AttrBar pos={shap.positive_attr_pct} neg={shap.negative_attr_pct} net={shap.net_attribution} />
                   <div className="flex justify-between text-[11px] text-slate-400">
-                    <span>🔴 Warm / Red: pixels supporting <em>{shap.target_class}</em></span>
-                    <span>🔵 Cool / Blue: pixels opposing <em>{shap.target_class}</em></span>
+                    <span>🔴 Warm / Red: Salient lesion features supporting <em>{shap.target_class}</em></span>
+                    <span>🔵 Cool / Blue: Features pulling away towards other differentials</span>
                   </div>
                 </div>
 
