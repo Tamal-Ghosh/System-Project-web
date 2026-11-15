@@ -1,21 +1,23 @@
-# E38 loader (part 1)
+# E38 model loading
 
-Isolated loader; not yet connected to main.py or the UI. No weights are committed.
-Use Python with PyTorch and the open_clip package from DermFM-Zero source commit
-c9f3d6a149ab048ae8a98ea4701e23b271e7368a (src on PYTHONPATH).
-Generic open-clip-torch is not a substitute for this custom source.
-Provide recipe.json, a selected fold best.pth, and a local Hugging Face snapshot
-2039b405065ff5ead7e58c04ec5604bd1e4a7769 containing open_clip_config.json and
-open_clip_pytorch_model.bin. Foundation access must already be configured;
-this loader does not download weights or read repository credentials.
+The loader supports the verified full-weight portable deployment package,
+including fixed source/foundation checksums and strict adapter compatibility.
+It fails closed on missing, mismatched or non-finite weights. Importing the
+module never loads a model. No API or UI integration is introduced in this step.
 
-Call dermfm.loader.load_model(recipe_path=..., checkpoint_path=...,
-foundation_path=..., device="cpu"). The result contains model, eval_transform,
-checkpoint_epoch and class order. Saved prototypes are loaded from the adapter;
-text prompts do not need recomputing. Keep the returned foundation transform
-for the preprocessing phase. The architecture still takes two image tensors
-and 10 metadata values; single-image adaptation is not implemented here.
+Use load_model(recipe_path=..., checkpoint_path=..., foundation_path=...,
+device="cpu"). The portable foundation directory contains manifest.json,
+open_clip_config.json and open_clip_pytorch_model.bin; its sibling dermfm_source
+contains the original CAE/PanDerm definitions and license. Those files and all
+large weights remain outside Git. The portable path needs PyTorch, torchvision,
+timm and NumPy, with no generic open_clip install. The alternative full-source
+path requires the pinned DermFM-Zero checkout.
 
-Run from backend: python -m unittest discover -s tests -v
-Tests use a tiny synthetic backbone, not the real foundation. A successful real
-foundation load and resource measurement remain required before deployment.
+prepare_model.py extracts selected adapters safely from the E38 archive and
+creates ignored local assets and model.local.json. model.example.json documents
+the local configuration fields. For this full deployment package, paths can also
+point directly to its assets/recipe.json and assets/fold*_best.pth files.
+
+From backend: python -m unittest discover -s tests -v
+The tests at this step cover loader compatibility, fail-closed behavior and
+portable checksum/provenance checks; they do not measure clinical accuracy.

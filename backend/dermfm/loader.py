@@ -60,6 +60,7 @@ class DermFMFusion(nn.Module):
         self.head = nn.Sequential(nn.Linear(dim*4+64, 256), nn.GELU(), nn.Dropout(.3), nn.Linear(256, 11))
         self.gate = nn.Sequential(nn.Linear(dim*2+64, 64), nn.GELU(), nn.Linear(64, 11))
         self.log_scale = nn.Parameter(torch.tensor(2.302585))
+        self.adapter_keys = {k for k, value in self.named_parameters() if value.requires_grad} | {"prototypes"}
     def train(self, mode=True):
         super().train(mode)
         self.backbone.eval()
@@ -100,8 +101,7 @@ def read_checkpoint(path):
     return checkpoint
 
 def load_adapter(model, state):
-    names = {name for name, p in model.named_parameters() if p.requires_grad}
-    expected = {k: v for k, v in model.state_dict().items() if k in names or k == "prototypes"}
+    expected = {k: v for k, v in model.state_dict().items() if k in model.adapter_keys}
     if set(state) != set(expected):
         raise ModelLoadError("Adapter keys do not match E38 architecture")
     for key, target in expected.items():
@@ -119,6 +119,9 @@ class LoadedModel:
 
 def local_foundation(snapshot):
     """Use the pinned DermFM source's open_clip; never download implicitly."""
+    if (Path(snapshot) / "manifest.json").is_file():
+        from .portable import load_portable_foundation
+        return load_portable_foundation(snapshot)
     import subprocess
     import open_clip
     source = Path(open_clip.__file__).resolve().parent
@@ -133,14 +136,29 @@ def local_foundation(snapshot):
     weights = snapshot / "open_clip_pytorch_model.bin"
     if not weights.is_file():
         raise ModelLoadError("Local foundation weights are missing")
-    from open_clip.factory import _MODEL_CONFIGS
-    name = "e38_local_pinned"
-    _MODEL_CONFIGS[name] = config["model_cfg"]
-    foundation, _, transform = open_clip.create_model_and_transforms(
-        name, pretrained=str(weights), device="cpu", pretrained_hf=False, **{
-            "image_" + key: value for key, value in config["preprocess_cfg"].items()
-            if key in ("mean", "std", "interpolation", "resize_mode")})
-    return foundation.visual, transform
+    # The adapter already contains text prototypes. Construct only the visual
+    # tower, avoiding text-model configuration downloads and extra memory.
+    from open_clip.model import _build_vision_tower
+    from open_clip.transform import PreprocessCfg, image_transform_v2
+    from dataclasses import asdict
+    model_cfg = config["model_cfg"]
+    vision_cfg = dict(model_cfg["vision_cfg"])
+    vision_cfg["timm_model_pretrained"] = False
+    visual = _build_vision_tower(model_cfg["embed_dim"], vision_cfg,
+                                quick_gelu=model_cfg.get("quick_gelu", False))
+    checkpoint = torch.load(weights, map_location="cpu", weights_only=True)
+    state = checkpoint.get("state_dict", checkpoint)
+    state = {k.removeprefix("module."): v for k, v in state.items()}
+    visual_state = {k.removeprefix("visual."): v for k, v in state.items() if k.startswith("visual.")}
+    if not visual_state or any(not torch.isfinite(v).all() for v in visual_state.values()):
+        raise ModelLoadError("Foundation visual weights missing or non-finite")
+    visual.load_state_dict(visual_state, strict=True)
+    preprocess = {**asdict(PreprocessCfg()), **config["preprocess_cfg"]}
+    if getattr(visual, "image_size", None) is not None:
+        preprocess["size"] = visual.image_size
+    transform = image_transform_v2(PreprocessCfg(**preprocess), is_train=False)
+    return visual.eval(), transform
+
 
 def load_model(*, recipe_path, checkpoint_path, foundation_path, device="cpu", foundation_factory=None):
     """Return only a fully validated model. No initialized-model fallback."""
