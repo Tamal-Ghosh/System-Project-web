@@ -46,11 +46,6 @@ export function ImageAnalysisWorkspace() {
   }
 
   return <div className="clinical-analysis-page clinical-analysis-page--stacked">
-    {image && <section className="patient-inputs" aria-label="Patient details for classification">
-      <label>Age (years)<input type="number" min="0" max="120" step="1" value={age} onChange={event => setAge(event.target.value)} /></label>
-      <label>Sex<select value={sex} onChange={event => setSex(event.target.value)}><option value="">Select sex</option><option value="male">Male</option><option value="female">Female</option></select></label>
-      <p>Use a dermoscopic image. Single-image prediction is experimental.</p>
-    </section>}
     <ImageWorkspace image={image} loading={loading} error={error} onFile={load}
       onClear={() => { clear(); setAge(''); setSex('') }} onStartClassification={handleStartClassification}
       isClassifying={isClassifying} hasStartedClassification={!!result} />

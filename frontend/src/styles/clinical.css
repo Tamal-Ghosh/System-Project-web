@@ -91,7 +91,10 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
   flex: none;
 }
 .clinical-viewer-footer:has(.viewport-overlay-controls) {
-  padding: 10px 16px 12px;
+  padding: 14px 16px 16px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
 }
 .clinical-viewer-footer > span { font-size: 13px; color: var(--muted); }
 .image-view-switch { display: flex; gap: 3px; padding: 3px; border: 1px solid var(--color-line); border-radius: 6px; }
@@ -307,9 +310,10 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
 
 /* Action Bar centered in footer below the lesion image container */
 .viewport-overlay-controls {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
+  transform: none;
+  width: 100%;
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -554,3 +558,15 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
 .class-score progress { width:100%; height:10px; accent-color:#008e82; }
 .class-score strong { text-align:right; font-size:14px; }
 .inspector-provenance strong { overflow-wrap:anywhere; }
+
+.patient-inputs--inline { display:flex; flex-wrap:nowrap; padding:0; border:0; border-radius:0; gap:14px; align-items:center; flex:0 0 auto; }
+.patient-inputs--inline label { display:flex; align-items:center; gap:8px; font-size:14px; white-space:nowrap; }
+.patient-inputs--inline input { width:96px; }
+.patient-inputs--inline select { width:138px; }
+.patient-inputs--inline input,.patient-inputs--inline select { min-height:40px; padding:7px 10px; }
+
+@media (max-width: 600px) {
+  .viewport-overlay-controls { justify-content:flex-start; }
+  .patient-inputs--inline { flex-wrap:wrap; flex:1 1 100%; }
+  .viewport-overlay-controls > .viewport-action-btn { flex:0 1 auto; min-height:44px; }
+}
