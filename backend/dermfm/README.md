@@ -21,3 +21,12 @@ point directly to its assets/recipe.json and assets/fold*_best.pth files.
 From backend: python -m unittest discover -s tests -v
 The tests at this step cover loader compatibility, fail-closed behavior and
 portable checksum/provenance checks; they do not measure clinical accuracy.
+
+## Image and metadata preprocessing
+
+preprocessing.py validates image byte/pixel limits and formats, applies EXIF
+orientation and RGB conversion, and calls the foundation evaluation transform.
+Age is normalized by 100; sex uses male/female one-hot values. Unknown site is
+seven zeros. The single image is provided to both input branches. This differs
+from paired-view training and requires separate validation. No inference service
+or endpoint is introduced in this step.
