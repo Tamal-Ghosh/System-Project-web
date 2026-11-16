@@ -1,54 +1,75 @@
-# Observed Docker setup checks - 16 November 2026
+# Verified Docker setup - 16 November 2026
 
-Branch: feature/docker-setup. No commit, registry upload or Git push performed.
+Branch: feature/docker-setup. Docker Desktop engine 29.9.3 is now running.
+No new Git commit, registry upload or Git push was performed during this run.
 
-## Passed
+## Passed in Docker
 
-- Default consumer Compose configuration parses successfully.
-- Publisher Compose build override, including named model context, parses.
-- The staged model context contains exactly 12 approved files. Foundation, five
-  adapters and architecture source match pinned SHA256 values. No tokens, caches,
-  training dataset, virtual environment or reference-prediction data are included.
-- Seven Docker packaging/configuration tests pass, including ZIP whitelist and
-  duplicate-entry rejection, checksum rejection, ready/unavailable health handling,
-  model-in-image configuration and service-DNS proxy wiring.
-- All 18 existing backend application tests pass natively.
-- Frontend TypeScript and production build pass natively.
-- Environment-aware Vite config resolves /api and /health to backend:8000 and
-  enables polling when Docker environment flags are provided.
-- Node and PowerShell launcher syntax checks pass.
-- The Docker HTTP smoke-test utility passed against the real native backend via
-  Vite's proxy: five folds, 11 scores, site=trunk, finite probabilities summing to
-  one. This synthetic-image request took 58.377 seconds on CPU. It verifies HTTP
-  execution, not clinical accuracy and not Docker execution.
-- The consumer launcher stops clearly if the Docker engine is unavailable.
+- Built dermascope-backend:e38-cpu-v1 with the full local foundation, all five
+  trained adapters and checksum-pinned architecture source inside the image.
+- Built dermascope-frontend:dev-v1 with its node_modules included. Host npm config,
+  caches and virtual environments are excluded (also checked in the image).
+- Both Compose services reached healthy; frontend waits for real model readiness.
+- All 18 backend tests passed inside the backend container.
+- Real five-fold HTTP inference through http://frontend:5173 passed: 11 finite
+  scores, probabilities summing to one and site=trunk. Synthetic-image CPU
+  inference took 47.043 seconds. This is not a clinical accuracy test.
+- Frontend TypeScript and production build passed inside the frontend container.
+- A separate backend container with --network none and no host model mounts
+  loaded all five folds successfully. No weights/token/network download needed.
+- Frontend CSS HMR and backend Python reload were observed in container logs.
+  Temporary CSS content was restored exactly; backend source content unchanged.
+- Browser-facing http://localhost:5180/health reports status=ready and model
+  version e38-control-de093a6fdecdebe3 after the source reload.
+- Exported both complete images to docker/bundles/dermascope-images.tar.
+  Archive size: 2,057,330,688 bytes (about 2.06 GB decimal / 1.92 GiB).
+- Re-imported the exported archive successfully: both image tags loaded.
+- Consumer docker/start.ps1 completed successfully and the website proxy reported
+  ready. SHA256 is stored beside the archive in dermascope-images.tar.sha256:
+  790BBAA452CB298573E56A6AA25C4AB2EEF6A07FDAAC2A9A353C5AD4171554D7.
 
-## Blocked - not claimed as passed
+## Other checks
 
-Actual container image build, container startup/health, container-native tests,
-container HMR and export of dermascope-images.tar could not run. The attempted
-`docker compose -f compose.yaml -f compose.build.yaml build` returned:
+- Both consumer/publisher Compose configurations validate.
+- Seven packaging/configuration tests pass: strict context whitelist, duplicate
+  ZIP entry rejection, checksum integrity, credential/data exclusion, readiness
+  interpretation, model-in-image paths and container proxy wiring.
+- Publisher context contains exactly 12 approved model/source/license files.
+- Launcher syntax checks pass. No host Python, Node, CUDA, model.local.json or
+  separate model files are needed on the consumer PC after image import.
 
-    Error response from daemon: Docker Desktop is unable to start
+## Fixes found during the real run
 
-Docker Desktop logs report an internal bbolt page assertion during engine startup:
+- Excluded .npm-cache, .tmp, .cache, .npmrc and tsbuildinfo from build context.
+  The frontend context shrank to roughly 207 KB instead of host cache payloads.
+- Set container npm cache to /tmp/npm-cache.
+- Allowed the precise Vite hostname frontend so the internal HTTP proxy smoke
+  test is accepted; localhost remains the normal browser address.
+- Added an offline model-load check to future publisher builds.
+- Increased frontend health-check timeout to 30 seconds, startup grace to 60
+  seconds and retries to eight. The large archive import briefly saturated I/O
+  and caused the prior 10-second check to time out; the service recovered, and
+  the revised consumer launcher was then verified successfully.
 
-    Page expected to be: 17, but self identifies as 0
+## Handoff
 
-A non-destructive Docker Desktop restart did not restore the engine. A separate
-Ubuntu WSL registration also refers to a missing virtual disk path. Existing
-Docker/WSL disks, images, volumes and distributions were not reset or deleted.
+Deliver the current project source and the image archive together. On another
+PC with a healthy Docker engine in Linux-container mode, RUN_DOCKER.cmd imports
+missing images automatically and starts the services. The archive contains all
+base/dependency/model layers. No foundation ZIP or manual weight download is
+needed on that PC. Images are linux/amd64; arm64 emulation may be slower.
+Only localhost:5180 is published. No registry image has been published.
 
-No image archive has been produced and no prebuilt image is published. Another
-PC cannot use this as a completed handoff until a working Docker engine builds,
-tests and exports the images. The consumer configuration intentionally refuses
-implicit pulls/builds and never tries to fetch model weights at runtime.
+The earlier bbolt startup error no longer blocks this run. No Docker or WSL data
+was reset or deleted by this agent. Database/authentication and single-image
+accuracy validation remain separate application work.
 
-## Finish once Docker engine is healthy
+## Development page-load optimization
 
-From the project root run docker/build.ps1 with -Package pointing at the complete
-local deployment ZIP/directory and -Export. That script builds images, waits for
-real health, runs backend tests, sends a real HTTP inference through the frontend
-container, builds the frontend and exports both images. If any step fails, export
-is not performed. Deliver the exported archive with the project source, then
-use RUN_DOCKER.cmd on the other PC. No host Python or separate weights are needed.
+Excluded host .npm-cache/.tmp, generated dist and tsbuildinfo files from Vite
+polling, and set polling interval to 750 ms. Measured HTML responses fell from
+5.2-5.5 seconds to 0.008-0.039 seconds after restart; JS/CSS/health responses
+were 0.004-0.054 seconds in the checked warm run. The container frontend build
+passed after this configuration change. These are server response timings,
+not a browser full-render benchmark. The source bind mount applies this config
+without rebuilding the weight image.

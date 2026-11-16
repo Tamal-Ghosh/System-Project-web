@@ -31,7 +31,8 @@ powershell -ExecutionPolicy Bypass -File docker/build.ps1 `
 ```
 
 The script validates a strict model/source whitelist and pinned SHA256 checks,
-builds both images, waits for actual model readiness, runs backend tests, sends
+builds both images, verifies full model loading with networking disabled and no
+host model mount, waits for actual model readiness, runs backend tests, sends
 a real five-fold synthetic-image request through the frontend proxy, builds the
 frontend, then exports both images in one archive. Only after that succeeds is
 the archive ready to hand to Progga. Do not describe an unbuilt image
@@ -43,6 +44,7 @@ Manual Linux/macOS publisher equivalent:
 python3 docker/prepare_model_context.py --package /path/to/E38_DermFM_Deployment
 # Requires Docker Compose additional-context support (Compose 2.17+).
 docker compose -f compose.yaml -f compose.build.yaml build
+docker run --rm --network none --pull never dermascope-backend:e38-cpu-v1 python check_model.py
 docker compose up -d --wait --wait-timeout 360
 docker compose exec -T backend python -m unittest discover -s tests -v
 docker compose exec -T -e SMOKE_BASE_URL=http://frontend:5173 backend python /opt/smoke_test.py
