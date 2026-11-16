@@ -22,11 +22,16 @@ From backend: python -m unittest discover -s tests -v
 The tests at this step cover loader compatibility, fail-closed behavior and
 portable checksum/provenance checks; they do not measure clinical accuracy.
 
-## Image and metadata preprocessing
+## Classification inference
 
-preprocessing.py validates image byte/pixel limits and formats, applies EXIF
-orientation and RGB conversion, and calls the foundation evaluation transform.
-Age is normalized by 100; sex uses male/female one-hot values. Unknown site is
-seven zeros. The single image is provided to both input branches. This differs
-from paired-view training and requires separate validation. No inference service
-or endpoint is introduced in this step.
+preprocessing.py handles one dermoscopic image, age, sex and unknown body site.
+InferenceService reads local DERMFM_RECIPE, DERMFM_FOUNDATION, DERMFM_CHECKPOINTS,
+DERMFM_DEVICE and DERMFM_TTA settings. Configure one fold or five distinct folds.
+It shares a foundation while serially switching validated adapters under a lock.
+TTA averages original/horizontal/vertical logits per fold, then applies softmax.
+Ensemble averages fold probabilities; metrics.py computes descriptive entropy
+and top-two margin. Results include provenance, agreement and explicit unavailable
+features. Single-image accuracy is not established. No API is added in this step.
+
+check_model.py loads the configured real model offline. Service tests use a
+synthetic visual tower and verify averaging, adapter switches and repeatability.
