@@ -3,6 +3,7 @@ import unittest
 import torch
 from PIL import Image
 from dermfm.preprocessing import encode_metadata, decode_image
+from dermfm.loader import SITES
 
 def image_bytes():
     output=io.BytesIO()
@@ -18,3 +19,12 @@ class PreprocessingTests(unittest.TestCase):
     def test_image_decode_and_invalid_bytes(self):
         self.assertEqual(decode_image(image_bytes()).size,(12,10))
         with self.assertRaises(ValueError): decode_image(b'not an image')
+
+    def test_all_training_locations_use_recipe_order(self):
+        for index, site in enumerate(SITES):
+            with self.subTest(site=site):
+                values=encode_metadata(40,'female',site)[0,3:]
+                expected=torch.zeros(7); expected[index]=1
+                torch.testing.assert_close(values,expected)
+        torch.testing.assert_close(encode_metadata(40,'female','unknown')[0,3:],torch.zeros(7))
+        with self.assertRaises(ValueError): encode_metadata(40,'female','unsupported')

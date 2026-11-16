@@ -6,7 +6,7 @@ import { classify } from '../../services/classification'
 import { regionBounds } from './image/geometry'
 
 export function ImageAnalysisWorkspace() {
-  const { image, loading, error, load, clear, region, age, setAge, sex, setSex, result, setResult } = useAnalysisSession()
+  const { image, loading, error, load, clear, region, age, setAge, sex, setSex, site, setSite, result, setResult } = useAnalysisSession()
   const [isClassifying, setIsClassifying] = useState(false)
   const [requestError, setRequestError] = useState('')
   const controller = useRef<AbortController | null>(null)
@@ -15,7 +15,7 @@ export function ImageAnalysisWorkspace() {
     controller.current?.abort()
     setResult(null); setRequestError(''); setIsClassifying(false)
     return () => controller.current?.abort()
-  }, [image, region, age, sex, setResult])
+  }, [image, region, age, sex, site, setResult])
 
   async function handleStartClassification() {
     if (!image || isClassifying) return
@@ -34,7 +34,7 @@ export function ImageAnalysisWorkspace() {
       context.drawImage(image.element, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, canvas.width, canvas.height)
       const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('Could not prepare image.')), 'image/png'))
       if (active.signal.aborted) return
-      const response = await classify(blob, Number(age), sex, active.signal)
+      const response = await classify(blob, Number(age), sex, site, active.signal)
       if (active.signal.aborted) return
       setResult(response)
       requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
@@ -47,7 +47,7 @@ export function ImageAnalysisWorkspace() {
 
   return <div className="clinical-analysis-page clinical-analysis-page--stacked">
     <ImageWorkspace image={image} loading={loading} error={error} onFile={load}
-      onClear={() => { clear(); setAge(''); setSex('') }} onStartClassification={handleStartClassification}
+      onClear={() => { clear(); setAge(''); setSex(''); setSite('unknown') }} onStartClassification={handleStartClassification}
       isClassifying={isClassifying} hasStartedClassification={!!result} />
     {isClassifying && <p role="status">Running model analysis…</p>}
     {requestError && <p className="image-error" role="alert">{requestError}</p>}

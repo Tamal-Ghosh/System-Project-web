@@ -6,6 +6,7 @@ import { createRegionPreview } from './useLocalImage'
 import { clampPoint, regionBounds } from './geometry'
 import type { Point, Region } from './geometry'
 import { useAnalysisSession } from '../AnalysisSession'
+import { lesionLocations } from '../metadata'
 
 interface Props {
   image: LocalImage | null
@@ -30,7 +31,7 @@ export function ImageWorkspace({
 }: Props) {
   const input = useRef<HTMLInputElement>(null)
   const svg = useRef<SVGSVGElement>(null)
-  const { age, setAge, sex, setSex, tool, setTool, region, setRegion, history, setHistory, zoom, setZoom, view, setView } = useAnalysisSession()
+  const { age, setAge, sex, setSex, site, setSite, tool, setTool, region, setRegion, history, setHistory, zoom, setZoom, view, setView } = useAnalysisSession()
   const [draft, setDraft] = useState<Region | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [previewError, setPreviewError] = useState('')
@@ -142,6 +143,7 @@ export function ImageWorkspace({
           <div className="patient-inputs patient-inputs--inline" role="group" aria-label="Patient details for classification">
             <label>Age (years)<input type="number" min="0" max="120" step="1" value={age} onChange={event => setAge(event.target.value)} /></label>
             <label>Sex<select value={sex} onChange={event => setSex(event.target.value)}><option value="">Select sex</option><option value="male">Male</option><option value="female">Female</option></select></label>
+            <label>Lesion location<select name="site" value={site} onChange={event => setSite(event.target.value)}>{lesionLocations.map(location => <option key={location.value} value={location.value}>{location.label}</option>)}</select></label>
           </div>
 
           <button

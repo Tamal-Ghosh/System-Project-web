@@ -8,6 +8,7 @@ function useSessionState() {
   const source = useLocalImage()
   const [age, setAge] = useState('')
   const [sex, setSex] = useState('')
+  const [site, setSite] = useState('unknown')
   const [result, setResult] = useState<ClassificationResult | null>(null)
   const [tool, setTool] = useState<'rectangle' | 'freehand'>('rectangle')
   const [region, setRegion] = useState<Region | null>(null)
@@ -15,7 +16,7 @@ function useSessionState() {
   const [zoom, setZoom] = useState(1)
   const [view, setView] = useState<'original' | 'input'>('original')
   useEffect(() => { setRegion(null); setHistory([]); setZoom(1); setView('original') }, [source.image])
-  return { ...source, age, setAge, sex, setSex, result, setResult, tool, setTool, region, setRegion, history, setHistory, zoom, setZoom, view, setView }
+  return { ...source, age, setAge, sex, setSex, site, setSite, result, setResult, tool, setTool, region, setRegion, history, setHistory, zoom, setZoom, view, setView }
 }
 
 const AnalysisSessionContext = createContext<ReturnType<typeof useSessionState> | null>(null)

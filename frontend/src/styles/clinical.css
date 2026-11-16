@@ -559,7 +559,7 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
 .class-score strong { text-align:right; font-size:14px; }
 .inspector-provenance strong { overflow-wrap:anywhere; }
 
-.patient-inputs--inline { display:flex; flex-wrap:nowrap; padding:0; border:0; border-radius:0; gap:14px; align-items:center; flex:0 0 auto; }
+.patient-inputs--inline { display:flex; flex-wrap:wrap; padding:0; border:0; border-radius:0; gap:14px; align-items:center; flex:0 1 auto; min-width:0; }
 .patient-inputs--inline label { display:flex; align-items:center; gap:8px; font-size:14px; white-space:nowrap; }
 .patient-inputs--inline input { width:96px; }
 .patient-inputs--inline select { width:138px; }
@@ -570,3 +570,5 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
   .patient-inputs--inline { flex-wrap:wrap; flex:1 1 100%; }
   .viewport-overlay-controls > .viewport-action-btn { flex:0 1 auto; min-height:44px; }
 }
+
+.patient-inputs--inline select[name="site"] { width:190px; max-width:100%; }

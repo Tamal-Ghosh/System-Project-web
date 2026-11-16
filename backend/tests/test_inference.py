@@ -31,3 +31,17 @@ class ApiTests(unittest.TestCase):
                 self.assertEqual(client.get('/health').json()['status'],'unavailable')
                 response=client.post('/api/v1/analyses',data={'age':'20','sex':'male'},files={'image':('test.png',image_bytes(),'image/png')})
                 self.assertEqual(response.status_code,503)
+
+    def test_location_is_passed_to_model_and_invalid_location_rejected(self):
+        service=InferenceService(self.settings,factory)
+        with TestClient(create_app(lambda:service)) as client:
+            with patch.object(service,'predict',wraps=service.predict) as predict:
+                response=client.post('/api/v1/analyses',data={'age':'40','sex':'female','site':'trunk'},files={'image':('test.png',image_bytes(),'image/png')})
+                self.assertEqual(response.status_code,200,response.text)
+                self.assertEqual(predict.call_args.args[-1],'trunk')
+                self.assertEqual(response.json()['metadata']['site'],'trunk')
+                self.assertNotIn('Body site was encoded as unknown.',response.json()['limitations'])
+                predict.reset_mock()
+                invalid=client.post('/api/v1/analyses',data={'age':'40','sex':'female','site':'invalid'},files={'image':('test.png',image_bytes(),'image/png')})
+                self.assertEqual(invalid.status_code,422)
+                predict.assert_not_called()

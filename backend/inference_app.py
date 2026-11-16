@@ -26,8 +26,8 @@ def create_app(service_factory=None):
         service = getattr(app.state, 'service', None)
         return dict(status='ready' if service else 'unavailable', model_version=service.version if service else None)
     @app.post('/api/v1/analyses')
-    async def analyze(image: UploadFile = File(...), age: float = Form(...), sex: str = Form(...)):
-        try: encode_metadata(age, sex)
+    async def analyze(image: UploadFile = File(...), age: float = Form(...), sex: str = Form(...), site: str = Form("unknown")):
+        try: encode_metadata(age, sex, site)
         except ValueError as exc: raise HTTPException(422, str(exc)) from exc
         service = getattr(app.state, 'service', None)
         if service is None: raise HTTPException(503, 'Model unavailable. Complete the backend model setup.')
@@ -36,7 +36,7 @@ def create_app(service_factory=None):
             contents = await image.read(MAX_BYTES+1)
             try: decoded = decode_image(contents)
             except ValueError as exc: raise HTTPException(422, str(exc)) from exc
-            try: return await run_in_threadpool(service.predict, decoded, age, sex)
+            try: return await run_in_threadpool(service.predict, decoded, age, sex, site)
             except Exception as exc:
                 logger.exception('Inference failed')
                 raise HTTPException(503, 'Classification failed; no result was produced.') from exc

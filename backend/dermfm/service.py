@@ -48,10 +48,10 @@ class InferenceService:
             with path.open('rb') as stream:
                 for chunk in iter(lambda: stream.read(1024*1024), b''): digest.update(chunk)
         self.version = 'e38-control-' + digest.hexdigest()[:16]
-    def predict(self, image, age, sex):
+    def predict(self, image, age, sex, site="unknown"):
         start = time.perf_counter()
         torch.set_num_threads(4)
-        derm, clinical, meta = prepare_inputs(image, age, sex, self.loaded.eval_transform, self.settings.device)
+        derm, clinical, meta = prepare_inputs(image, age, sex, self.loaded.eval_transform, self.settings.device, site)
         members = []
         with self.lock, torch.inference_mode():
             for checkpoint in self.states:
@@ -71,9 +71,10 @@ class InferenceService:
             uncertainty=dict(normalized_entropy=entropy, top_two_margin=margin),
             ensemble=dict(member_count=len(members), member_scores=[p.tolist() for p in members],
                 agreement=float(np.mean([int(p.argmax()) == winner for p in members])) if len(members)>1 else None),
-            input_policy='single_dermoscopic_duplicated_unknown_site', tta=self.settings.tta,
+            input_policy='single_dermoscopic_duplicated', metadata=dict(age=age, sex=sex, site=site or 'unknown'), tta=self.settings.tta,
             checkpoint_epochs=[int(c['epoch']) for c in self.states],
             elapsed_ms=round((time.perf_counter()-start)*1000),
             limitations=['Single-image adaptation has not been validated against paired-view training.',
-                'Body site was encoded as unknown. Class scores are not calibrated clinical risk.'],
+                'Class scores are not calibrated clinical risk.'] +
+                (['Body site was encoded as unknown.'] if site in ('unknown', '', None) else []),
             unavailable=['xai', 'ood', 'image_quality', 'clinical_next_step'], persistence='not_saved')

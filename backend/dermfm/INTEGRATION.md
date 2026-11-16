@@ -52,12 +52,15 @@ as run_inference.ps1 and run backend/check_model.py from backend.
 
 ## Behavior and limits
 
-Doctor supplies one dermoscopic image, age (0–120) and sex (male/female).
+Doctor supplies one dermoscopic image, age (0–120), sex (male/female) and an
+optional lesion location dropdown. Location values exactly match the recipe site
+vocabulary: foot, genital, hand, head_neck_face, lower_extremity, trunk and
+upper_extremity. Unknown is the default and remains backward compatible.
 The browser sends the original region or selected bounding crop as PNG, with
 no patient name. Freehand currently selects a bounding rectangle, not a mask.
 No selected crop means the complete image. The server uses the pinned foundation
-preprocessing, repeats this one image into both branches and sets site one-hot
-to all zeros. This differs from paired-image/site training. Results explicitly
+preprocessing, repeats this one image into both branches and encodes the selected site with the recipe one-hot ordering. Unknown site
+uses all zeros. This differs from paired-image/site training. Results explicitly
 say this single-image adaptation is unvalidated. Never display the paired-view
 OOF performance as the accuracy of this adapted pipeline.
 
@@ -68,7 +71,7 @@ with 429; missing model assets return 503, not initialized-model predictions.
 Scores, normalized entropy, top-two margin and member agreement are calculated.
 No calibration, OOD, image quality, XAI, clinical recommendation or persistence
 is fabricated. Output includes model fingerprint, epoch list and input policy.
-Age, sex, region and image changes invalidate previous UI results; pending fetches
+Age, sex, site, region and image changes invalidate previous UI results; pending fetches
 are aborted and stale responses ignored. No analysis appears until success.
 
 This endpoint is for localhost development only, without authentication/storage.
