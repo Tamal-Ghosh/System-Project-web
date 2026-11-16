@@ -35,3 +35,7 @@ yarn-error.log*
 *.swo
 .DS_Store
 Thumbs.db
+
+# Local E38 assets and environment
+backend/model.local.json
+backend/.model-assets/

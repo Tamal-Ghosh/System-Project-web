@@ -1,0 +1,10 @@
+{
+  "recipe": "ABSOLUTE_PATH/recipe.json",
+  "foundation": "ABSOLUTE_PATH/snapshots/2039b405065ff5ead7e58c04ec5604bd1e4a7769",
+  "source": "ABSOLUTE_PATH/dermfm_source",
+  "checkpoints": [
+    "ABSOLUTE_PATH/fold0/best.pth"
+  ],
+  "device": "cpu",
+  "tta": true
+}

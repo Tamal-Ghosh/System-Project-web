@@ -6,6 +6,7 @@ import { createRegionPreview } from './useLocalImage'
 import { clampPoint, regionBounds } from './geometry'
 import type { Point, Region } from './geometry'
 import { useAnalysisSession } from '../AnalysisSession'
+import { lesionLocations } from '../metadata'
 
 interface Props {
   image: LocalImage | null
@@ -30,7 +31,7 @@ export function ImageWorkspace({
 }: Props) {
   const input = useRef<HTMLInputElement>(null)
   const svg = useRef<SVGSVGElement>(null)
-  const { tool, setTool, region, setRegion, history, setHistory, zoom, setZoom, view, setView } = useAnalysisSession()
+  const { age, setAge, sex, setSex, site, setSite, tool, setTool, region, setRegion, history, setHistory, zoom, setZoom, view, setView } = useAnalysisSession()
   const [draft, setDraft] = useState<Region | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [previewError, setPreviewError] = useState('')
@@ -98,7 +99,7 @@ export function ImageWorkspace({
 
           {/* Image size indicator below the lesion image */}
           <div className="viewport-dimensions-badge">
-            <span>{image.width} × {image.height} px</span>
+            <span>{image.width} Ã— {image.height} px</span>
           </div>
         </div>
       ) : (
@@ -107,12 +108,12 @@ export function ImageWorkspace({
           <h3>Your image, in focus.</h3>
           <p>Drop an image here, or choose a file.</p>
           <button className="button button--primary" onClick={() => input.current?.click()} disabled={loading}>
-            <Upload size={16} />{loading ? 'Opening image…' : 'Choose image'}
+            <Upload size={16} />{loading ? 'Opening imageâ€¦' : 'Choose image'}
           </button>
-          <span>JPG, PNG or WebP · up to 20 MB</span>
+          <span>JPG, PNG or WebP Â· up to 20 MB</span>
         </div>
       )}
-      {loading && image && <div className="image-loading" role="status">Opening image…</div>}
+      {loading && image && <div className="image-loading" role="status">Opening imageâ€¦</div>}
     </div>
     {(error || previewError) && <p role="alert" className="image-error">{error || previewError}</p>}
     <div className="clinical-viewer-footer">
@@ -139,6 +140,12 @@ export function ImageWorkspace({
             <span>Upload image</span>
           </button>
 
+          <div className="patient-inputs patient-inputs--inline" role="group" aria-label="Patient details for classification">
+            <label>Age (years)<input type="number" min="0" max="120" step="1" value={age} onChange={event => setAge(event.target.value)} /></label>
+            <label>Sex<select value={sex} onChange={event => setSex(event.target.value)}><option value="">Select sex</option><option value="male">Male</option><option value="female">Female</option></select></label>
+            <label>Lesion location<select name="site" value={site} onChange={event => setSite(event.target.value)}>{lesionLocations.map(location => <option key={location.value} value={location.value}>{location.label}</option>)}</select></label>
+          </div>
+
           <button
             type="button"
             className="viewport-action-btn viewport-action-btn--danger"
@@ -159,7 +166,7 @@ export function ImageWorkspace({
             {isClassifying ? (
               <>
                 <span className="button-spinner" aria-hidden="true" />
-                <span>Classifying…</span>
+                <span>Classifyingâ€¦</span>
               </>
             ) : (
               <>
