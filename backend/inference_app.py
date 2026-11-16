@@ -6,6 +6,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
 from dermfm.service import InferenceService, Settings
 from dermfm.preprocessing import MAX_BYTES, decode_image, encode_metadata
+from database import check_database_connection
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,13 @@ def create_app(service_factory=None):
         app.state.service = None
     app = FastAPI(title="DermaInsight E38 development API", lifespan=lifespan)
     gate = threading.Lock()
+    @app.get('/health/database')
+    def database_health():
+        result = check_database_connection()
+        if result['status'] != 'connected':
+            raise HTTPException(503, 'Database connection is not available.')
+        return result
+
     @app.get('/health')
     def health():
         service = getattr(app.state, 'service', None)
