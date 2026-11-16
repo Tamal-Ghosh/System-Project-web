@@ -9,6 +9,8 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Model context preparation failed.' }
   docker compose -f compose.yaml -f compose.build.yaml build
   if ($LASTEXITCODE -ne 0) { throw 'Docker build failed.' }
+  docker run --rm --network none --pull never dermascope-backend:e38-cpu-v1 python check_model.py
+  if ($LASTEXITCODE -ne 0) { throw 'Offline model loading from the image failed.' }
   docker compose up -d --wait --wait-timeout 360
   if ($LASTEXITCODE -ne 0) { throw 'Containers did not become healthy.' }
   docker compose exec -T backend python -m unittest discover -s tests -v

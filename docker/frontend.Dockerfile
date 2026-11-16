@@ -1,4 +1,5 @@
 FROM node:24-bookworm-slim
+ENV NPM_CONFIG_CACHE=/tmp/npm-cache
 WORKDIR /app
 COPY --chown=node:node frontend/package.json frontend/package-lock.json ./
 RUN npm ci && node -e "require('fs').writeFileSync('node_modules/.dermascope-lock',require('crypto').createHash('sha256').update(require('fs').readFileSync('package-lock.json')).digest('hex'))" \

@@ -9,7 +9,12 @@ export default defineConfig(({ mode }) => {
     plugins: [react(), tailwindcss()],
     base: './',
     server: {
-      watch: { usePolling: env.WATCH_POLLING === 'true' },
+      allowedHosts: ['frontend'],
+      watch: {
+        usePolling: env.WATCH_POLLING === 'true',
+        interval: 750,
+        ignored: ['**/.npm-cache/**', '**/.tmp/**', '**/dist/**', '**/*.tsbuildinfo'],
+      },
       proxy: { '/api': apiTarget, '/health': apiTarget },
     },
   }
