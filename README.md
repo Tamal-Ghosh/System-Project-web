@@ -1,3 +1,11 @@
+## Docker development
+
+See [docker/README.md](docker/README.md). The prebuilt backend image contains the
+full E38 foundation and all five adapters. Once the publisher has built/exported
+the images, another PC can use `RUN_DOCKER.cmd` with that image bundle, without
+installing Python/Node or downloading weights separately. The image bundle is
+not in Git and no registry image has been published.
+
 > **E38 model integration (development):** use `run_inference.ps1` for the new backend. The older `start_app.bat` still starts legacy ResNet50.
 > Setup and tests: [backend/dermfm/INTEGRATION.md](backend/dermfm/INTEGRATION.md).
 

@@ -39,3 +39,7 @@ Thumbs.db
 # Local E38 assets and environment
 backend/model.local.json
 backend/.model-assets/
+
+# Docker publisher assets and transferable image bundles
+docker/model-assets/
+docker/bundles/
