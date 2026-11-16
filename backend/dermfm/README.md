@@ -22,16 +22,16 @@ From backend: python -m unittest discover -s tests -v
 The tests at this step cover loader compatibility, fail-closed behavior and
 portable checksum/provenance checks; they do not measure clinical accuracy.
 
-## Classification inference
+## Development API
 
-preprocessing.py handles one dermoscopic image, age, sex and unknown body site.
-InferenceService reads local DERMFM_RECIPE, DERMFM_FOUNDATION, DERMFM_CHECKPOINTS,
-DERMFM_DEVICE and DERMFM_TTA settings. Configure one fold or five distinct folds.
-It shares a foundation while serially switching validated adapters under a lock.
-TTA averages original/horizontal/vertical logits per fold, then applies softmax.
-Ensemble averages fold probabilities; metrics.py computes descriptive entropy
-and top-two margin. Results include provenance, agreement and explicit unavailable
-features. Single-image accuracy is not established. No API is added in this step.
+inference_app.py adds GET /health and POST /api/v1/analyses (multipart image,
+age and sex). Unavailable model assets return 503, invalid input returns 422,
+and overlapping inference requests return 429. No fake result or fallback model
+is returned. The response contains eleven scores and calculated uncertainty,
+member agreement, model provenance and the unvalidated single-image policy.
 
-check_model.py loads the configured real model offline. Service tests use a
-synthetic visual tower and verify averaging, adapter switches and repeatability.
+Configure ignored backend/model.local.json and run run_inference.ps1 from the
+project root. An optional python field selects a prepared deployment environment.
+The service binds to localhost:8000. This is development-only: no authentication,
+image storage or database is provided. Legacy main.py remains unchanged.
+Install requirements-dev.txt for API tests. No dashboard connection is added here.
