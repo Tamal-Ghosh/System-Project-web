@@ -543,3 +543,14 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
 .topbar .dashboard-title { margin: 0; font-size: clamp(24px, 3vw, 32px); line-height: 1.15; font-weight: 700; }
 .viewer-mode-actions { flex: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 .viewer-mode-actions > .button { margin-inline-start: auto; }
+
+/* Model input and result integration */
+.patient-inputs { display:flex; flex-wrap:wrap; align-items:end; gap:20px; padding:20px 24px; border:1px solid #dce5ef; border-radius:14px; background:#fff; }
+.patient-inputs label { display:grid; gap:8px; color:#183049; font-weight:600; }
+.patient-inputs input,.patient-inputs select { width:180px; min-height:44px; padding:8px 12px; background:white; color:#183049; border:1px solid #cbd9e6; border-radius:8px; font:inherit; }
+.patient-inputs p { color:#526c89; margin:0 0 10px; flex:1 1 240px; }
+.classification-results h3 { font-size:26px; margin:0 0 8px; }
+.class-score { display:grid; grid-template-columns:90px minmax(80px,1fr) 64px; align-items:center; gap:14px; margin:16px 0; }
+.class-score progress { width:100%; height:10px; accent-color:#008e82; }
+.class-score strong { text-align:right; font-size:14px; }
+.inspector-provenance strong { overflow-wrap:anywhere; }

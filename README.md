@@ -1,3 +1,6 @@
+> **E38 model integration (development):** use `run_inference.ps1` for the new backend. The older `start_app.bat` still starts legacy ResNet50.
+> Setup and tests: [backend/dermfm/INTEGRATION.md](backend/dermfm/INTEGRATION.md).
+
 # DermaInsight AI: Clinical Research & Skin Lesion Analysis Platform
 
 DermaInsight AI is a modern clinical decision-support web application for dermatological skin lesion screening and research. Powered by a PyTorch **ResNet50** deep convolutional neural network trained on the **HAM10000** dataset, the system integrates **Uncertainty Quantification (Monte Carlo Dropout)**, **Explainable AI (Grad-CAM)**, **Lesion Boundary Segmentation**, and an **Interactive AI Clinical Assistant**.
