@@ -142,7 +142,7 @@ export function ImageWorkspace({
 
           <div className="patient-inputs patient-inputs--inline" role="group" aria-label="Patient details for classification">
             <label>Age (years)<input type="number" min="0" max="120" step="1" value={age} onChange={event => setAge(event.target.value)} /></label>
-            <label>Sex<select value={sex} onChange={event => setSex(event.target.value)}><option value="">Select sex</option><option value="male">Male</option><option value="female">Female</option></select></label>
+            <label>Gender<select value={sex} onChange={event => setSex(event.target.value)}><option value="">Select gender</option><option value="male">Male</option><option value="female">Female</option></select></label>
             <label>Lesion location<select name="site" value={site} onChange={event => setSite(event.target.value)}>{lesionLocations.map(location => <option key={location.value} value={location.value}>{location.label}</option>)}</select></label>
           </div>
 

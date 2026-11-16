@@ -20,7 +20,7 @@ export function ImageAnalysisWorkspace() {
   async function handleStartClassification() {
     if (!image || isClassifying) return
     if (age.trim() === '' || !Number.isFinite(Number(age)) || Number(age) < 0 || Number(age) > 120 || !sex) {
-      setRequestError('Enter an age between 0 and 120 and select sex.'); return
+      setRequestError('Enter an age between 0 and 120 and select gender.'); return
     }
     const active = new AbortController()
     controller.current?.abort(); controller.current = active
