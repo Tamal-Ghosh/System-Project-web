@@ -1,0 +1,8 @@
+# Torch / torchvision come from the dedicated official CPU index in Dockerfile.
+timm==1.0.30
+numpy==2.3.5
+pillow==12.3.0
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+python-multipart==0.0.20
+httpx==0.28.1
