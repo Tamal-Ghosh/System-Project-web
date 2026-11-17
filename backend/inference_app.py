@@ -6,6 +6,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
 from dermfm.service import InferenceService, Settings
 from dermfm.preprocessing import MAX_BYTES, decode_image, encode_metadata
+from dermfm.calibration import get_calibration_evidence
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,11 @@ def create_app(service_factory=None):
         app.state.service = None
     app = FastAPI(title="DermaInsight E38 development API", lifespan=lifespan)
     gate = threading.Lock()
+    @app.get('/api/v1/model/calibration')
+    def calibration_evidence():
+        service = getattr(app.state, 'service', None)
+        return get_calibration_evidence(service.calibration if service else None)
+
     @app.get('/health')
     def health():
         service = getattr(app.state, 'service', None)
