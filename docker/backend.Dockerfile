@@ -14,7 +14,7 @@ RUN python -m pip install torch==2.12.1 torchvision==0.27.1 \
 COPY docker/requirements-cpu.txt /tmp/requirements-cpu.txt
 RUN python -m pip install -r /tmp/requirements-cpu.txt && python -m pip check
 WORKDIR /app
-COPY --chown=10001:10001 backend/inference_app.py backend/check_model.py ./
+COPY --chown=10001:10001 backend/inference_app.py backend/check_model.py backend/medicine_catalog.py ./
 COPY --chown=10001:10001 backend/database.py ./
 COPY --chown=10001:10001 backend/dermfm ./dermfm
 COPY --chown=10001:10001 backend/tests ./tests

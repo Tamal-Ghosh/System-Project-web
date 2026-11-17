@@ -17,6 +17,7 @@ from database import (
     list_doctor_assessments,
     list_prescriptions,
 )
+from medicine_catalog import MedicineCatalogUnavailable, suggest_medicines
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +180,13 @@ def create_app(service_factory=None):
         try:
             return await run_in_threadpool(list_prescriptions, limit)
         except DatabaseUnavailable as exc:
+            raise HTTPException(503, str(exc)) from exc
+
+    @app.get('/api/v1/medicines/suggest')
+    async def medicine_suggestions(q: str = Query(min_length=3, max_length=80)):
+        try:
+            return await run_in_threadpool(suggest_medicines, q)
+        except MedicineCatalogUnavailable as exc:
             raise HTTPException(503, str(exc)) from exc
 
     @app.post('/api/v1/analyses')
