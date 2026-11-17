@@ -10,7 +10,7 @@ import { openPrintableReport, prescriptionHtml } from '../../services/reports'
 const scheduleOptions = ['0', '¼', '½', '1', '1½', '2']
 const emptyMedication = (): MedicationEntry => ({ name: '', rxcui: null, strength: '', formulation: '', route: '', morning: '0', noon: '0', night: '0', duration: '', instructions: '' })
 
-export function PrescriptionPanel({ result, patientId, assessment }: { result: ClassificationResult; patientId: string; assessment: DoctorAssessment | null }) {
+export function PrescriptionPanel({ result, patientId, assessment }: { result: ClassificationResult; patientName: string; patientId: string; assessment: DoctorAssessment | null }) {
   const [symptoms, setSymptoms] = useState('')
   const [allergyStatus, setAllergyStatus] = useState<AllergyStatus>('unknown')
   const [allergyDetails, setAllergyDetails] = useState('')
@@ -82,7 +82,7 @@ export function PrescriptionPanel({ result, patientId, assessment }: { result: C
 
   return <details className="clinical-disclosure prescription-section">
     <summary><span className="disclosure-icon"><Pill size={21} /></span><span><strong>Prescription</strong><small>Doctor-authored medicines and instructions</small></span><ChevronDown className="disclosure-chevron" size={19} /></summary>
-    {saved ? <div className="prescription-saved"><CheckCircle2 size={24} /><div><strong>Prescription saved</strong><p>It is linked to patient {saved.patient_id} and analysis {saved.analysis_id.slice(0, 8)}.</p><button type="button" className="button button--secondary" onClick={() => openPrintableReport(prescriptionHtml(saved))}><Printer size={16} />Print prescription</button></div></div> : <form className="prescription-form" onSubmit={submit}>
+    {saved ? <div className="prescription-saved"><CheckCircle2 size={24} /><div><strong>Prescription saved</strong><p>It is linked to patient {saved.patient_id} and analysis {saved.analysis_id.slice(0, 8)}.</p><button type="button" className="button button--secondary" onClick={() => openPrintableReport(prescriptionHtml(saved, assessment || undefined))}><Printer size={16} />Print prescription</button></div></div> : <form className="prescription-form" onSubmit={submit}>
       <div className="prescription-safety-note">RxNorm supplies name suggestions only. The treating doctor independently selects the medicine and dosing schedule.</div>
       <label>Symptoms / presenting concerns<input value={symptoms} maxLength={1000} onChange={event => setSymptoms(event.target.value)} placeholder="Itching, bleeding, recent change — separated by commas" /></label>
       <div className="assessment-fields assessment-fields--two"><label>Allergy status<select value={allergyStatus} onChange={event => setAllergyStatus(event.target.value as AllergyStatus)}><option value="unknown">Not confirmed</option><option value="none_known">No known allergies</option><option value="present">Known allergy</option></select></label><label>Allergy details<input disabled={allergyStatus !== 'present'} value={allergyDetails} maxLength={500} onChange={event => setAllergyDetails(event.target.value)} placeholder={allergyStatus === 'present' ? 'Medicine or substance and reaction' : 'Enable by selecting known allergy'} /></label></div>

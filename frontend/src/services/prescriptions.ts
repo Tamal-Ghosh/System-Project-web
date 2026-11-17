@@ -27,6 +27,7 @@ export interface PrescriptionFormData {
 
 export interface PrescriptionContext {
   patientId: string
+  patientName: string
   result: ClassificationResult
   assessmentId?: string | null
 }
@@ -35,6 +36,7 @@ export interface Prescription {
   id: string
   assessment_id: string | null
   patient_id: string
+  patient_name: string | null
   analysis_id: string
   model_version: string
   leading_class: string
@@ -60,6 +62,7 @@ export async function savePrescription(context: PrescriptionContext, form: Presc
     body: JSON.stringify({
       assessment_id: context.assessmentId || null,
       patient_id: context.patientId,
+      patient_name: context.patientName,
       analysis_id: context.result.analysis_id,
       model_version: context.result.model_version,
       leading_class: context.result.leading_class,

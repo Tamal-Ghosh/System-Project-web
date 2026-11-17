@@ -48,15 +48,18 @@ def create_doctor_assessment(payload: dict) -> dict:
     query = """
         INSERT INTO public.doctor_assessments (
             patient_id, analysis_id, model_version, leading_class, model_scores, patient_metadata,
+            image_snapshot, uncertainty, ensemble, input_policy, tta, limitations,
             decision, confidence, suspected_diagnosis, differential_diagnoses,
             clinical_note, next_action
         ) VALUES (
             %(patient_id)s, %(analysis_id)s, %(model_version)s, %(leading_class)s, %(model_scores)s,
-            %(patient_metadata)s, %(decision)s, %(confidence)s, %(suspected_diagnosis)s,
+            %(patient_metadata)s, %(image_snapshot)s, %(uncertainty)s, %(ensemble)s,
+            %(input_policy)s, %(tta)s, %(limitations)s, %(decision)s, %(confidence)s, %(suspected_diagnosis)s,
             %(differential_diagnoses)s, %(clinical_note)s, %(next_action)s
         )
         RETURNING id, patient_id, analysis_id, model_version, leading_class, model_scores,
-                  patient_metadata, decision, confidence,
+                  patient_metadata, image_snapshot, uncertainty, ensemble, input_policy, tta,
+                  limitations, decision, confidence,
                   suspected_diagnosis, differential_diagnoses, clinical_note,
                   next_action, reviewer_user_id, reviewer_name, created_at
     """
@@ -64,6 +67,8 @@ def create_doctor_assessment(payload: dict) -> dict:
         **payload,
         "model_scores": Jsonb(payload["model_scores"]),
         "patient_metadata": Jsonb(payload["patient_metadata"]),
+        "uncertainty": Jsonb(payload["uncertainty"]),
+        "ensemble": Jsonb(payload["ensemble"]),
     }
     try:
         with psycopg.connect(_database_url(), connect_timeout=8, row_factory=dict_row) as connection:
@@ -77,8 +82,9 @@ def create_doctor_assessment(payload: dict) -> dict:
 
 def list_doctor_assessments(limit: int = 50) -> list[dict]:
     query = """
-        SELECT id, patient_id, analysis_id, model_version, leading_class, model_scores,
-               patient_metadata, decision, confidence,
+        SELECT id, patient_id, patient_name, analysis_id, model_version, leading_class, model_scores,
+               patient_metadata, image_snapshot, uncertainty, ensemble, input_policy, tta,
+               limitations, decision, confidence,
                suspected_diagnosis, differential_diagnoses, clinical_note,
                next_action, reviewer_user_id, reviewer_name, created_at
         FROM public.doctor_assessments
@@ -98,14 +104,14 @@ def list_doctor_assessments(limit: int = 50) -> list[dict]:
 def create_prescription(payload: dict) -> dict:
     query = """
         INSERT INTO public.prescriptions (
-            assessment_id, patient_id, analysis_id, model_version, leading_class,
+            assessment_id, patient_id, patient_name, analysis_id, model_version, leading_class,
             patient_metadata, symptoms, allergy_status, allergy_details, medications, follow_up
         ) VALUES (
             %(assessment_id)s, %(patient_id)s, %(analysis_id)s, %(model_version)s,
             %(leading_class)s, %(patient_metadata)s, %(symptoms)s, %(allergy_status)s,
             %(allergy_details)s, %(medications)s, %(follow_up)s
         )
-        RETURNING id, assessment_id, patient_id, analysis_id, model_version,
+        RETURNING id, assessment_id, patient_id, patient_name, analysis_id, model_version,
                   leading_class, patient_metadata, symptoms, allergy_status,
                   allergy_details, medications, follow_up, prescriber_user_id,
                   prescriber_name, created_at
@@ -129,7 +135,7 @@ def create_prescription(payload: dict) -> dict:
 
 def list_prescriptions(limit: int = 100) -> list[dict]:
     query = """
-        SELECT id, assessment_id, patient_id, analysis_id, model_version,
+        SELECT id, assessment_id, patient_id, patient_name, analysis_id, model_version,
                leading_class, patient_metadata, symptoms, allergy_status,
                allergy_details, medications, follow_up, prescriber_user_id,
                prescriber_name, created_at

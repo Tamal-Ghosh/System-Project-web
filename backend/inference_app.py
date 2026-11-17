@@ -33,13 +33,30 @@ class PatientMetadataSnapshot(BaseModel):
     site: str = Field(min_length=1, max_length=80)
 
 
+class UncertaintySnapshot(BaseModel):
+    normalized_entropy: float = Field(ge=0, le=1)
+    top_two_margin: float = Field(ge=0, le=1)
+
+
+class EnsembleSnapshot(BaseModel):
+    member_count: int = Field(ge=1, le=100)
+    agreement: float | None = Field(default=None, ge=0, le=1)
+
+
 class DoctorAssessmentCreate(BaseModel):
     patient_id: str = Field(pattern=r'^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$')
+    patient_name: str = Field(min_length=2, max_length=120)
     analysis_id: UUID
     model_version: str = Field(min_length=1, max_length=160)
     leading_class: str = Field(min_length=1, max_length=80)
     model_scores: list[ScoreSnapshot]
     patient_metadata: PatientMetadataSnapshot
+    image_snapshot: str | None = Field(default=None, max_length=1_500_000, pattern=r'^data:image/(jpeg|png|webp);base64,')
+    uncertainty: UncertaintySnapshot
+    ensemble: EnsembleSnapshot
+    input_policy: str = Field(min_length=1, max_length=240)
+    tta: bool
+    limitations: list[str] = Field(default_factory=list, max_length=12)
     decision: Literal['agree', 'disagree', 'unsure']
     confidence: int = Field(ge=1, le=5)
     suspected_diagnosis: str | None = Field(default=None, max_length=200)
@@ -50,7 +67,7 @@ class DoctorAssessmentCreate(BaseModel):
         'additional_assessment', 'other'
     ]
 
-    @field_validator('suspected_diagnosis', 'clinical_note', mode='before')
+    @field_validator('patient_name', 'suspected_diagnosis', 'clinical_note', mode='before')
     @classmethod
     def strip_text(cls, value):
         return value.strip() if isinstance(value, str) else value
@@ -93,6 +110,7 @@ class MedicationCreate(BaseModel):
 class PrescriptionCreate(BaseModel):
     assessment_id: UUID | None = None
     patient_id: str = Field(pattern=r'^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$')
+    patient_name: str = Field(min_length=2, max_length=120)
     analysis_id: UUID
     model_version: str = Field(min_length=1, max_length=160)
     leading_class: str = Field(min_length=1, max_length=80)

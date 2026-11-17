@@ -5,6 +5,8 @@ export type NextAction = 'routine_follow_up' | 'dermatology_referral' | 'biopsy_
 
 export interface AssessmentFormData {
   patientId: string
+  patientName: string
+  imageSnapshot: string | null
   decision: AssessmentDecision
   confidence: number
   suspectedDiagnosis: string
@@ -16,11 +18,18 @@ export interface AssessmentFormData {
 export interface DoctorAssessment {
   id: string
   patient_id: string | null
+  patient_name: string | null
   analysis_id: string
   model_version: string
   leading_class: string
   model_scores: { label: string; score: number }[]
   patient_metadata: { age: number; sex: string; site: string }
+  image_snapshot: string | null
+  uncertainty: { normalized_entropy: number; top_two_margin: number }
+  ensemble: { member_count: number; agreement: number | null }
+  input_policy: string
+  tta: boolean
+  limitations: string[]
   decision: AssessmentDecision
   confidence: number
   suspected_diagnosis: string | null
@@ -44,11 +53,18 @@ export async function saveAssessment(result: ClassificationResult, form: Assessm
     signal,
     body: JSON.stringify({
       patient_id: form.patientId,
+      patient_name: form.patientName,
       analysis_id: result.analysis_id,
       model_version: result.model_version,
       leading_class: result.leading_class,
       model_scores: result.scores,
       patient_metadata: result.metadata,
+      image_snapshot: form.imageSnapshot,
+      uncertainty: result.uncertainty,
+      ensemble: result.ensemble,
+      input_policy: result.input_policy,
+      tta: result.tta,
+      limitations: result.limitations,
       decision: form.decision,
       confidence: form.confidence,
       suspected_diagnosis: form.suspectedDiagnosis || null,

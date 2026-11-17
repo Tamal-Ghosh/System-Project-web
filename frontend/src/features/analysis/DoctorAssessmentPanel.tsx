@@ -1,10 +1,10 @@
-import { AlertCircle, CheckCircle2, ChevronDown, ClipboardCheck, FileText, Save, UserRound } from 'lucide-react'
+import { AlertCircle, CheckCircle2, ChevronDown, ClipboardCheck, FileText, Save } from 'lucide-react'
 import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { ClassificationResult } from '../../services/classification'
 import { saveAssessment } from '../../services/assessments'
 import type { AssessmentDecision, DoctorAssessment, NextAction } from '../../services/assessments'
-import { doctorReportHtml, openPrintableReport, patientSummaryHtml } from '../../services/reports'
+import { doctorReportHtml, openPrintableReport } from '../../services/reports'
 import { PrescriptionPanel } from './PrescriptionPanel'
 
 const decisions: { value: AssessmentDecision; label: string }[] = [
@@ -13,7 +13,7 @@ const decisions: { value: AssessmentDecision; label: string }[] = [
   { value: 'unsure', label: 'Unsure' },
 ]
 
-export function DoctorAssessmentPanel({ result, patientId }: { result: ClassificationResult; patientId: string }) {
+export function DoctorAssessmentPanel({ result, patientId, imageSnapshot }: { result: ClassificationResult; patientName: string; patientId: string; imageSnapshot: string | null }) {
   const [decision, setDecision] = useState<AssessmentDecision | ''>('')
   const [confidence, setConfidence] = useState(3)
   const [diagnosis, setDiagnosis] = useState('')
@@ -21,7 +21,6 @@ export function DoctorAssessmentPanel({ result, patientId }: { result: Classific
   const [note, setNote] = useState('')
   const [nextAction, setNextAction] = useState<NextAction>('additional_assessment')
   const [savedAssessment, setSavedAssessment] = useState<DoctorAssessment | null>(null)
-  const [patientApproved, setPatientApproved] = useState(false)
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [error, setError] = useState('')
   const controller = useRef<AbortController | null>(null)
@@ -35,6 +34,8 @@ export function DoctorAssessmentPanel({ result, patientId }: { result: Classific
     try {
       const saved = await saveAssessment(result, {
         patientId,
+        patientName,
+        imageSnapshot,
         decision,
         confidence,
         suspectedDiagnosis: diagnosis.trim(),
@@ -54,7 +55,7 @@ export function DoctorAssessmentPanel({ result, patientId }: { result: Classific
 
   return <div className="doctor-workflow"><details className="doctor-assessment clinical-disclosure" open aria-labelledby="doctor-assessment-title">
     <summary className="doctor-assessment__heading"><span className="disclosure-icon"><ClipboardCheck size={22} /></span><div><div className="eyebrow">Clinician review</div><h2 id="doctor-assessment-title">Doctor assessment</h2><p>Record your independent interpretation after reviewing the model output.</p></div><ChevronDown className="disclosure-chevron" size={20} /></summary>
-    {status === 'saved' && savedAssessment ? <div className="assessment-saved" role="status"><CheckCircle2 size={24} /><div className="assessment-saved__content"><strong>Assessment saved</strong><p>Generate a technical clinical report or approve a simplified patient summary.</p><div className="assessment-report-actions"><button type="button" className="button button--secondary" onClick={() => openPrintableReport(doctorReportHtml(savedAssessment))}><FileText size={16} />Doctor report</button><label className="patient-approval"><input type="checkbox" checked={patientApproved} onChange={event => setPatientApproved(event.target.checked)} />I approve the patient-facing summary</label><button type="button" className="button button--secondary" disabled={!patientApproved} onClick={() => openPrintableReport(patientSummaryHtml(savedAssessment))}><UserRound size={16} />Patient summary</button></div></div></div> : <form onSubmit={submit} className="assessment-form">
+    {status === 'saved' && savedAssessment ? <div className="assessment-saved" role="status"><CheckCircle2 size={24} /><div className="assessment-saved__content"><strong>Assessment saved</strong><p>The clinician report is ready to review and print.</p><div className="assessment-report-actions"><button type="button" className="button button--secondary" onClick={() => openPrintableReport(doctorReportHtml(savedAssessment))}><FileText size={16} />Doctor report</button></div></div></div> : <form onSubmit={submit} className="assessment-form">
       <fieldset><legend>Do you agree with the leading classification?</legend><div className="assessment-decisions">{decisions.map(item => <button key={item.value} type="button" aria-pressed={decision === item.value} className={decision === item.value ? 'selected' : ''} onClick={() => setDecision(item.value)}>{item.label}</button>)}</div></fieldset>
       <label>Clinical confidence<select value={confidence} onChange={event => setConfidence(Number(event.target.value))}><option value={1}>1 — Very uncertain</option><option value={2}>2 — Uncertain</option><option value={3}>3 — Moderate</option><option value={4}>4 — Confident</option><option value={5}>5 — Very confident</option></select></label>
       <div className="assessment-fields assessment-fields--two">
