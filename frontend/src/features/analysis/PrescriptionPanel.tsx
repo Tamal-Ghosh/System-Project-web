@@ -10,7 +10,7 @@ import { openPrintableReport, prescriptionHtml } from '../../services/reports'
 const scheduleOptions = ['0', '¼', '½', '1', '1½', '2']
 const emptyMedication = (): MedicationEntry => ({ name: '', rxcui: null, strength: '', formulation: '', route: '', morning: '0', noon: '0', night: '0', duration: '', instructions: '' })
 
-export function PrescriptionPanel({ result, patientId, assessment }: { result: ClassificationResult; patientName: string; patientId: string; assessment: DoctorAssessment | null }) {
+export function PrescriptionPanel({ result, patientName, patientId, assessment }: { result: ClassificationResult; patientName: string; patientId: string; assessment: DoctorAssessment | null }) {
   const [symptoms, setSymptoms] = useState('')
   const [allergyStatus, setAllergyStatus] = useState<AllergyStatus>('unknown')
   const [allergyDetails, setAllergyDetails] = useState('')
@@ -70,7 +70,7 @@ export function PrescriptionPanel({ result, patientId, assessment }: { result: C
     const active = new AbortController(); controller.current?.abort(); controller.current = active
     setSaving(true); setError('')
     try {
-      const prescription = await savePrescription({ patientId, result, assessmentId: assessment?.id }, {
+      const prescription = await savePrescription({ patientId, patientName, result, assessmentId: assessment?.id }, {
         symptoms: symptoms.split(',').map(value => value.trim()).filter(Boolean).slice(0, 12),
         allergyStatus, allergyDetails: allergyDetails.trim(), medications, followUp: followUp.trim(),
       }, active.signal)

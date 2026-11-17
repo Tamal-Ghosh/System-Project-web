@@ -13,7 +13,7 @@ const decisions: { value: AssessmentDecision; label: string }[] = [
   { value: 'unsure', label: 'Unsure' },
 ]
 
-export function DoctorAssessmentPanel({ result, patientId, imageSnapshot }: { result: ClassificationResult; patientName: string; patientId: string; imageSnapshot: string | null }) {
+export function DoctorAssessmentPanel({ result, patientName, patientId, imageSnapshot }: { result: ClassificationResult; patientName: string; patientId: string; imageSnapshot: string | null }) {
   const [decision, setDecision] = useState<AssessmentDecision | ''>('')
   const [confidence, setConfidence] = useState(3)
   const [diagnosis, setDiagnosis] = useState('')
@@ -67,5 +67,5 @@ export function DoctorAssessmentPanel({ result, patientId, imageSnapshot }: { re
       {error && <p className="assessment-error" role="alert"><AlertCircle size={16} />{error}</p>}
       <div className="assessment-actions"><p>Model output supports review; it does not replace clinical judgment. Reviewer identity will come from login.</p><button type="submit" className="button button--primary" disabled={!decision || status === 'saving'}><Save size={16} />{status === 'saving' ? 'Saving…' : 'Save assessment'}</button></div>
     </form>}
-  </details><PrescriptionPanel result={result} patientId={patientId} assessment={savedAssessment} /></div>
+  </details><PrescriptionPanel result={result} patientName={patientName} patientId={patientId} assessment={savedAssessment} /></div>
 }

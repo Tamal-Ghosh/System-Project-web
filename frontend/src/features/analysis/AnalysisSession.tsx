@@ -6,6 +6,7 @@ import type { Region } from './image/geometry'
 
 function useSessionState() {
   const source = useLocalImage()
+  const [patientName, setPatientName] = useState('')
   const [patientId, setPatientId] = useState('')
   const [age, setAge] = useState('')
   const [sex, setSex] = useState('')
@@ -17,7 +18,7 @@ function useSessionState() {
   const [zoom, setZoom] = useState(1)
   const [view, setView] = useState<'original' | 'input'>('original')
   useEffect(() => { setRegion(null); setHistory([]); setZoom(1); setView('original') }, [source.image])
-  return { ...source, patientId, setPatientId, age, setAge, sex, setSex, site, setSite, result, setResult, tool, setTool, region, setRegion, history, setHistory, zoom, setZoom, view, setView }
+  return { ...source, patientName, setPatientName, patientId, setPatientId, age, setAge, sex, setSex, site, setSite, result, setResult, tool, setTool, region, setRegion, history, setHistory, zoom, setZoom, view, setView }
 }
 
 const AnalysisSessionContext = createContext<ReturnType<typeof useSessionState> | null>(null)

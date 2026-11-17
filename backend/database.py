@@ -47,17 +47,17 @@ def check_database_connection() -> dict[str, str]:
 def create_doctor_assessment(payload: dict) -> dict:
     query = """
         INSERT INTO public.doctor_assessments (
-            patient_id, analysis_id, model_version, leading_class, model_scores, patient_metadata,
+            patient_id, patient_name, analysis_id, model_version, leading_class, model_scores, patient_metadata,
             image_snapshot, uncertainty, ensemble, input_policy, tta, limitations,
             decision, confidence, suspected_diagnosis, differential_diagnoses,
             clinical_note, next_action
         ) VALUES (
-            %(patient_id)s, %(analysis_id)s, %(model_version)s, %(leading_class)s, %(model_scores)s,
+            %(patient_id)s, %(patient_name)s, %(analysis_id)s, %(model_version)s, %(leading_class)s, %(model_scores)s,
             %(patient_metadata)s, %(image_snapshot)s, %(uncertainty)s, %(ensemble)s,
             %(input_policy)s, %(tta)s, %(limitations)s, %(decision)s, %(confidence)s, %(suspected_diagnosis)s,
             %(differential_diagnoses)s, %(clinical_note)s, %(next_action)s
         )
-        RETURNING id, patient_id, analysis_id, model_version, leading_class, model_scores,
+        RETURNING id, patient_id, patient_name, analysis_id, model_version, leading_class, model_scores,
                   patient_metadata, image_snapshot, uncertainty, ensemble, input_policy, tta,
                   limitations, decision, confidence,
                   suspected_diagnosis, differential_diagnoses, clinical_note,
@@ -107,7 +107,7 @@ def create_prescription(payload: dict) -> dict:
             assessment_id, patient_id, patient_name, analysis_id, model_version, leading_class,
             patient_metadata, symptoms, allergy_status, allergy_details, medications, follow_up
         ) VALUES (
-            %(assessment_id)s, %(patient_id)s, %(analysis_id)s, %(model_version)s,
+            %(assessment_id)s, %(patient_id)s, %(patient_name)s, %(analysis_id)s, %(model_version)s,
             %(leading_class)s, %(patient_metadata)s, %(symptoms)s, %(allergy_status)s,
             %(allergy_details)s, %(medications)s, %(follow_up)s
         )

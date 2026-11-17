@@ -19,7 +19,7 @@ function createReportSnapshot(source: HTMLCanvasElement) {
 }
 
 export function ImageAnalysisWorkspace() {
-  const { image, loading, error, load, clear, region, setPatientName, patientId, setPatientId, age, setAge, sex, setSex, site, setSite, result, setResult } = useAnalysisSession()
+  const { image, loading, error, load, clear, region, patientName, setPatientName, patientId, setPatientId, age, setAge, sex, setSex, site, setSite, result, setResult } = useAnalysisSession()
   const [isClassifying, setIsClassifying] = useState(false)
   const [requestError, setRequestError] = useState('')
   const [reportImageSnapshot, setReportImageSnapshot] = useState<string | null>(null)
@@ -29,7 +29,7 @@ export function ImageAnalysisWorkspace() {
     controller.current?.abort()
     setResult(null); setReportImageSnapshot(null); setRequestError(''); setIsClassifying(false)
     return () => controller.current?.abort()
-  }, [image, region, patientId, age, sex, site, setResult])
+  }, [image, region, patientName, patientId, age, sex, site, setResult])
 
   async function handleStartClassification() {
     if (!image || isClassifying) return
@@ -68,7 +68,7 @@ export function ImageAnalysisWorkspace() {
 
   return <div className="clinical-analysis-page clinical-analysis-page--stacked">
     <ImageWorkspace image={image} loading={loading} error={error} onFile={load}
-      onClear={() => { clear(); setPatientId(''); setAge(''); setSex(''); setSite('unknown') }} onStartClassification={handleStartClassification}
+      onClear={() => { clear(); setPatientName(''); setPatientId(''); setAge(''); setSex(''); setSite('unknown') }} onStartClassification={handleStartClassification}
       isClassifying={isClassifying} hasStartedClassification={!!result} />
     {isClassifying && <p role="status">Running model analysis…</p>}
     {requestError && <p className="image-error" role="alert">{requestError}</p>}

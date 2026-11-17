@@ -563,6 +563,7 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
 .patient-inputs--inline label { display:flex; align-items:center; gap:8px; font-size:14px; white-space:nowrap; }
 .patient-inputs--inline input { width:96px; }
 .patient-inputs--inline input[name="patientId"] { width:140px; }
+.patient-inputs--inline input[name="patientName"] { width:180px; }
 .patient-inputs--inline select { width:138px; }
 .patient-inputs--inline input,.patient-inputs--inline select { min-height:40px; padding:7px 10px; }
 
