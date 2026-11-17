@@ -4,9 +4,10 @@ import { useAnalysisSession } from './AnalysisSession'
 import { AnalysisInspector } from './AnalysisInspector'
 import { classify } from '../../services/classification'
 import { regionBounds } from './image/geometry'
+import { DoctorAssessmentPanel } from './DoctorAssessmentPanel'
 
 export function ImageAnalysisWorkspace() {
-  const { image, loading, error, load, clear, region, age, setAge, sex, setSex, site, setSite, result, setResult } = useAnalysisSession()
+  const { image, loading, error, load, clear, region, patientId, setPatientId, age, setAge, sex, setSex, site, setSite, result, setResult } = useAnalysisSession()
   const [isClassifying, setIsClassifying] = useState(false)
   const [requestError, setRequestError] = useState('')
   const controller = useRef<AbortController | null>(null)
@@ -15,10 +16,13 @@ export function ImageAnalysisWorkspace() {
     controller.current?.abort()
     setResult(null); setRequestError(''); setIsClassifying(false)
     return () => controller.current?.abort()
-  }, [image, region, age, sex, site, setResult])
+  }, [image, region, patientId, age, sex, site, setResult])
 
   async function handleStartClassification() {
     if (!image || isClassifying) return
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$/.test(patientId.trim())) {
+      setRequestError('Enter a patient ID using 3–40 letters, numbers, hyphens or underscores.'); return
+    }
     if (age.trim() === '' || !Number.isFinite(Number(age)) || Number(age) < 0 || Number(age) > 120 || !sex) {
       setRequestError('Enter an age between 0 and 120 and select gender.'); return
     }
@@ -47,10 +51,10 @@ export function ImageAnalysisWorkspace() {
 
   return <div className="clinical-analysis-page clinical-analysis-page--stacked">
     <ImageWorkspace image={image} loading={loading} error={error} onFile={load}
-      onClear={() => { clear(); setAge(''); setSex(''); setSite('unknown') }} onStartClassification={handleStartClassification}
+      onClear={() => { clear(); setPatientId(''); setAge(''); setSex(''); setSite('unknown') }} onStartClassification={handleStartClassification}
       isClassifying={isClassifying} hasStartedClassification={!!result} />
     {isClassifying && <p role="status">Running model analysis…</p>}
     {requestError && <p className="image-error" role="alert">{requestError}</p>}
-    {result && <div ref={resultsRef} className="classification-reveal-container"><AnalysisInspector hasImage={!!image} result={result} /></div>}
+    {result && <div ref={resultsRef} className="classification-reveal-container"><AnalysisInspector hasImage={!!image} result={result} /><DoctorAssessmentPanel key={result.analysis_id} result={result} patientId={patientId.trim()} /></div>}
   </div>
 }

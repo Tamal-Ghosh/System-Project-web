@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 
 import psycopg
+from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -14,10 +16,22 @@ logger = logging.getLogger(__name__)
 load_dotenv(Path(__file__).with_name(".env"), override=False)
 
 
+class DatabaseUnavailable(RuntimeError):
+    pass
+
+
+def _database_url() -> str:
+    value = os.getenv("DATABASE_URL")
+    if not value:
+        raise DatabaseUnavailable("Database is not configured")
+    return value
+
+
 def check_database_connection() -> dict[str, str]:
     """Run a read-only connectivity check without exposing connection details."""
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
+    try:
+        database_url = _database_url()
+    except DatabaseUnavailable:
         return {"status": "not_configured"}
 
     try:
@@ -28,3 +42,54 @@ def check_database_connection() -> dict[str, str]:
         # Never log the exception message: drivers may include connection details.
         logger.warning("Database connectivity check failed (%s)", type(exc).__name__)
         return {"status": "unavailable"}
+
+
+def create_doctor_assessment(payload: dict) -> dict:
+    query = """
+        INSERT INTO public.doctor_assessments (
+            patient_id, analysis_id, model_version, leading_class, model_scores, patient_metadata,
+            decision, confidence, suspected_diagnosis, differential_diagnoses,
+            clinical_note, next_action
+        ) VALUES (
+            %(patient_id)s, %(analysis_id)s, %(model_version)s, %(leading_class)s, %(model_scores)s,
+            %(patient_metadata)s, %(decision)s, %(confidence)s, %(suspected_diagnosis)s,
+            %(differential_diagnoses)s, %(clinical_note)s, %(next_action)s
+        )
+        RETURNING id, patient_id, analysis_id, model_version, leading_class, model_scores,
+                  patient_metadata, decision, confidence,
+                  suspected_diagnosis, differential_diagnoses, clinical_note,
+                  next_action, reviewer_user_id, reviewer_name, created_at
+    """
+    parameters = {
+        **payload,
+        "model_scores": Jsonb(payload["model_scores"]),
+        "patient_metadata": Jsonb(payload["patient_metadata"]),
+    }
+    try:
+        with psycopg.connect(_database_url(), connect_timeout=8, row_factory=dict_row) as connection:
+            return dict(connection.execute(query, parameters).fetchone())
+    except DatabaseUnavailable:
+        raise
+    except Exception as exc:
+        logger.exception("Could not create doctor assessment (%s)", type(exc).__name__)
+        raise DatabaseUnavailable("Assessment storage is unavailable") from exc
+
+
+def list_doctor_assessments(limit: int = 50) -> list[dict]:
+    query = """
+        SELECT id, patient_id, analysis_id, model_version, leading_class, model_scores,
+               patient_metadata, decision, confidence,
+               suspected_diagnosis, differential_diagnoses, clinical_note,
+               next_action, reviewer_user_id, reviewer_name, created_at
+        FROM public.doctor_assessments
+        ORDER BY created_at DESC
+        LIMIT %s
+    """
+    try:
+        with psycopg.connect(_database_url(), connect_timeout=8, row_factory=dict_row) as connection:
+            return [dict(row) for row in connection.execute(query, (limit,)).fetchall()]
+    except DatabaseUnavailable:
+        raise
+    except Exception as exc:
+        logger.exception("Could not list doctor assessments (%s)", type(exc).__name__)
+        raise DatabaseUnavailable("Assessment storage is unavailable") from exc
