@@ -93,3 +93,55 @@ def list_doctor_assessments(limit: int = 50) -> list[dict]:
     except Exception as exc:
         logger.exception("Could not list doctor assessments (%s)", type(exc).__name__)
         raise DatabaseUnavailable("Assessment storage is unavailable") from exc
+
+
+def create_prescription(payload: dict) -> dict:
+    query = """
+        INSERT INTO public.prescriptions (
+            assessment_id, patient_id, analysis_id, model_version, leading_class,
+            patient_metadata, symptoms, allergy_status, allergy_details, medications, follow_up
+        ) VALUES (
+            %(assessment_id)s, %(patient_id)s, %(analysis_id)s, %(model_version)s,
+            %(leading_class)s, %(patient_metadata)s, %(symptoms)s, %(allergy_status)s,
+            %(allergy_details)s, %(medications)s, %(follow_up)s
+        )
+        RETURNING id, assessment_id, patient_id, analysis_id, model_version,
+                  leading_class, patient_metadata, symptoms, allergy_status,
+                  allergy_details, medications, follow_up, prescriber_user_id,
+                  prescriber_name, created_at
+    """
+    parameters = {
+        **payload,
+        "patient_metadata": Jsonb(payload["patient_metadata"]),
+        "medications": Jsonb(payload["medications"]),
+    }
+    try:
+        with psycopg.connect(_database_url(), connect_timeout=8, row_factory=dict_row) as connection:
+            return dict(connection.execute(query, parameters).fetchone())
+    except DatabaseUnavailable:
+        raise
+    except psycopg.errors.UniqueViolation as exc:
+        raise ValueError("A prescription already exists for this analysis") from exc
+    except Exception as exc:
+        logger.exception("Could not create prescription (%s)", type(exc).__name__)
+        raise DatabaseUnavailable("Prescription storage is unavailable") from exc
+
+
+def list_prescriptions(limit: int = 100) -> list[dict]:
+    query = """
+        SELECT id, assessment_id, patient_id, analysis_id, model_version,
+               leading_class, patient_metadata, symptoms, allergy_status,
+               allergy_details, medications, follow_up, prescriber_user_id,
+               prescriber_name, created_at
+        FROM public.prescriptions
+        ORDER BY created_at DESC
+        LIMIT %s
+    """
+    try:
+        with psycopg.connect(_database_url(), connect_timeout=8, row_factory=dict_row) as connection:
+            return [dict(row) for row in connection.execute(query, (limit,)).fetchall()]
+    except DatabaseUnavailable:
+        raise
+    except Exception as exc:
+        logger.exception("Could not list prescriptions (%s)", type(exc).__name__)
+        raise DatabaseUnavailable("Prescription storage is unavailable") from exc

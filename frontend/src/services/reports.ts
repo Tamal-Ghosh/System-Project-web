@@ -40,3 +40,20 @@ function prescriptionFacts(prescription: Prescription) {
   const date = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(prescription.created_at))
   return `<div class="grid"><div class="fact"><span>Patient ID</span><strong>${escapeHtml(prescription.patient_id)}</strong></div><div class="fact"><span>Analysis ID</span><strong>${escapeHtml(prescription.analysis_id)}</strong></div><div class="fact"><span>Prescription date</span><strong>${escapeHtml(date)}</strong></div><div class="fact"><span>Model version</span><strong>${escapeHtml(prescription.model_version)}</strong></div><div class="fact"><span>Age</span><strong>${escapeHtml(prescription.patient_metadata.age)} years</strong></div><div class="fact"><span>Gender / location</span><strong>${escapeHtml(prescription.patient_metadata.sex)} · ${escapeHtml(prescription.patient_metadata.site)}</strong></div></div>`
 }
+
+export function prescriptionHtml(prescription: Prescription) {
+  const allergy = prescription.allergy_status === 'none_known' ? 'No known allergies' : prescription.allergy_status === 'present' ? prescription.allergy_details || 'Known allergy' : 'Not confirmed'
+  const medicines = prescription.medications.map((medicine, index) => {
+    const schedule = `${medicine.morning} + ${medicine.noon} + ${medicine.night}`
+    return `<tr><td>${index + 1}. ${escapeHtml(medicine.name)}${medicine.strength ? ` ${escapeHtml(medicine.strength)}` : ''}${medicine.formulation ? ` (${escapeHtml(medicine.formulation)})` : ''}</td><td><strong>${escapeHtml(schedule)}</strong><br><span class="muted">Morning + Noon + Night</span></td><td>${escapeHtml(medicine.route || '—')}</td><td>${escapeHtml(medicine.duration)}</td></tr>${medicine.instructions ? `<tr><td colspan="4" class="muted">Instructions: ${escapeHtml(medicine.instructions)}</td></tr>` : ''}`
+  }).join('')
+  return documentShell('Prescription', 'Clinician-authored medication order', `${prescriptionFacts(prescription)}<h2>Clinical context</h2><p><strong>Model classification:</strong> ${escapeHtml(prescription.leading_class)}</p><p><strong>Symptoms / concerns:</strong> ${prescription.symptoms.length ? prescription.symptoms.map(escapeHtml).join(', ') : 'Not recorded'}</p><p><strong>Allergy status:</strong> ${escapeHtml(allergy)}</p><h2>Medicines</h2><table class="scores"><thead><tr><th>Medicine</th><th>Schedule</th><th>Route</th><th>Duration</th></tr></thead><tbody>${medicines}</tbody></table>${prescription.follow_up ? `<h2>Follow-up and precautions</h2><p>${escapeHtml(prescription.follow_up)}</p>` : ''}<div class="signature"><div>Prescriber signature / registration</div><div>Date</div></div><div class="footer">Medicine-name matching is assisted by RxNorm. Every medicine, schedule and instruction is selected and entered by the treating clinician.</div>`)
+}
+
+export function openPrintableReport(html: string) {
+  const reportWindow = window.open('', '_blank')
+  if (!reportWindow) throw new Error('Allow pop-ups to open the report preview.')
+  reportWindow.opener = null
+  reportWindow.document.open(); reportWindow.document.write(html); reportWindow.document.close()
+  reportWindow.addEventListener('load', () => reportWindow.print(), { once: true })
+}

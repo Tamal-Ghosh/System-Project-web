@@ -13,7 +13,9 @@ from database import (
     DatabaseUnavailable,
     check_database_connection,
     create_doctor_assessment,
+    create_prescription,
     list_doctor_assessments,
+    list_prescriptions,
 )
 
 logger = logging.getLogger(__name__)
@@ -63,6 +65,63 @@ class DoctorAssessmentCreate(BaseModel):
         return cleaned
 
 
+class MedicationCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=160)
+    rxcui: str | None = Field(default=None, pattern=r'^\d+$')
+    strength: str = Field(default='', max_length=80)
+    formulation: str = Field(default='', max_length=80)
+    route: str = Field(default='', max_length=80)
+    morning: Literal['0', '¼', '½', '1', '1½', '2']
+    noon: Literal['0', '¼', '½', '1', '1½', '2']
+    night: Literal['0', '¼', '½', '1', '1½', '2']
+    duration: str = Field(min_length=1, max_length=120)
+    instructions: str = Field(default='', max_length=500)
+
+    @field_validator('*', mode='before')
+    @classmethod
+    def strip_medication_text(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+    @model_validator(mode='after')
+    def require_scheduled_dose(self):
+        if self.morning == self.noon == self.night == '0':
+            raise ValueError('At least one medicine dose time is required')
+        return self
+
+
+class PrescriptionCreate(BaseModel):
+    assessment_id: UUID | None = None
+    patient_id: str = Field(pattern=r'^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$')
+    analysis_id: UUID
+    model_version: str = Field(min_length=1, max_length=160)
+    leading_class: str = Field(min_length=1, max_length=80)
+    patient_metadata: PatientMetadataSnapshot
+    symptoms: list[str] = Field(default_factory=list, max_length=12)
+    allergy_status: Literal['none_known', 'present', 'unknown']
+    allergy_details: str | None = Field(default=None, max_length=500)
+    medications: list[MedicationCreate] = Field(min_length=1, max_length=10)
+    follow_up: str | None = Field(default=None, max_length=500)
+
+    @field_validator('symptoms')
+    @classmethod
+    def clean_symptoms(cls, values):
+        cleaned = [value.strip() for value in values if value.strip()]
+        if any(len(value) > 120 for value in cleaned):
+            raise ValueError('Each symptom must be at most 120 characters')
+        return list(dict.fromkeys(cleaned))
+
+    @field_validator('allergy_details', 'follow_up', mode='before')
+    @classmethod
+    def strip_optional_text(cls, value):
+        return value.strip() or None if isinstance(value, str) else value
+
+    @field_validator('allergy_details')
+    @classmethod
+    def require_allergy_details(cls, value, info):
+        if info.data.get('allergy_status') == 'present' and not value:
+            raise ValueError('Allergy details are required when allergies are present')
+        return value
+
 def create_app(service_factory=None):
     @asynccontextmanager
     async def lifespan(app):
@@ -103,6 +162,22 @@ def create_app(service_factory=None):
     async def list_assessments(limit: int = Query(default=50, ge=1, le=100)):
         try:
             return await run_in_threadpool(list_doctor_assessments, limit)
+        except DatabaseUnavailable as exc:
+            raise HTTPException(503, str(exc)) from exc
+
+    @app.post('/api/v1/prescriptions', status_code=201)
+    async def create_prescription_record(prescription: PrescriptionCreate):
+        try:
+            return await run_in_threadpool(create_prescription, prescription.model_dump())
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        except DatabaseUnavailable as exc:
+            raise HTTPException(503, str(exc)) from exc
+
+    @app.get('/api/v1/prescriptions')
+    async def get_prescriptions(limit: int = Query(default=100, ge=1, le=200)):
+        try:
+            return await run_in_threadpool(list_prescriptions, limit)
         except DatabaseUnavailable as exc:
             raise HTTPException(503, str(exc)) from exc
 

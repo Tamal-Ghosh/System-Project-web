@@ -5,6 +5,7 @@ import type { ClassificationResult } from '../../services/classification'
 import { saveAssessment } from '../../services/assessments'
 import type { AssessmentDecision, DoctorAssessment, NextAction } from '../../services/assessments'
 import { doctorReportHtml, openPrintableReport, patientSummaryHtml } from '../../services/reports'
+import { PrescriptionPanel } from './PrescriptionPanel'
 
 const decisions: { value: AssessmentDecision; label: string }[] = [
   { value: 'agree', label: 'Agree' },
@@ -65,5 +66,5 @@ export function DoctorAssessmentPanel({ result, patientId }: { result: Classific
       {error && <p className="assessment-error" role="alert"><AlertCircle size={16} />{error}</p>}
       <div className="assessment-actions"><p>Model output supports review; it does not replace clinical judgment. Reviewer identity will come from login.</p><button type="submit" className="button button--primary" disabled={!decision || status === 'saving'}><Save size={16} />{status === 'saving' ? 'Saving…' : 'Save assessment'}</button></div>
     </form>}
-  </details></div>
+  </details><PrescriptionPanel result={result} patientId={patientId} assessment={savedAssessment} /></div>
 }
