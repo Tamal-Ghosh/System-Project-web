@@ -9,11 +9,12 @@ export function ImageAnalysisWorkspace() {
   const { image, loading, error, load, clear, region, age, setAge, sex, setSex, site, setSite, result, setResult } = useAnalysisSession()
   const [isClassifying, setIsClassifying] = useState(false)
   const [requestError, setRequestError] = useState('')
+  const [analysisImage, setAnalysisImage] = useState<Blob | undefined>()
   const controller = useRef<AbortController | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     controller.current?.abort()
-    setResult(null); setRequestError(''); setIsClassifying(false)
+    setResult(null); setAnalysisImage(undefined); setRequestError(''); setIsClassifying(false)
     return () => controller.current?.abort()
   }, [image, region, age, sex, site, setResult])
 
@@ -24,7 +25,7 @@ export function ImageAnalysisWorkspace() {
     }
     const active = new AbortController()
     controller.current?.abort(); controller.current = active
-    setIsClassifying(true); setRequestError(''); setResult(null)
+    setIsClassifying(true); setRequestError(''); setResult(null); setAnalysisImage(undefined)
     try {
       const bounds = region ? regionBounds(region, image.width, image.height) : { x: 0, y: 0, width: image.width, height: image.height }
       const canvas = document.createElement('canvas')
@@ -36,7 +37,7 @@ export function ImageAnalysisWorkspace() {
       if (active.signal.aborted) return
       const response = await classify(blob, Number(age), sex, site, active.signal)
       if (active.signal.aborted) return
-      setResult(response)
+      setAnalysisImage(blob); setResult(response)
       requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
     } catch (failure) {
       if (!active.signal.aborted) setRequestError(failure instanceof Error ? failure.message : 'Classification failed. Please retry.')
@@ -51,6 +52,6 @@ export function ImageAnalysisWorkspace() {
       isClassifying={isClassifying} hasStartedClassification={!!result} />
     {isClassifying && <p role="status">Running model analysis…</p>}
     {requestError && <p className="image-error" role="alert">{requestError}</p>}
-    {result && <div ref={resultsRef} className="classification-reveal-container"><AnalysisInspector hasImage={!!image} result={result} /></div>}
+    {result && <div ref={resultsRef} className="classification-reveal-container"><AnalysisInspector hasImage={!!image} result={result} image={analysisImage} age={age} sex={sex} site={site} /></div>}
   </div>
 }
