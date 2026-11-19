@@ -6,9 +6,10 @@ try {
   $serverVersion = docker info --format '{{.ServerVersion}}'
   if ($LASTEXITCODE -ne 0 -or -not ($serverVersion -match '^\d+\.\d+')) { throw 'Docker engine is unavailable. Start Docker Desktop and wait until it is running.' }
   $missing = $false
-  foreach ($image in @('dermascope-backend:e38-cpu-v1','dermascope-frontend:dev-v1')) {
-    docker image inspect $image *> $null
-    if ($LASTEXITCODE -ne 0) { $missing = $true }
+  foreach ($image in @('dermascope-backend:dermfm-cpu-v2','dermascope-frontend:dermfm-v2')) {
+    $imageId = docker image ls --quiet $image
+    if ($LASTEXITCODE -ne 0) { throw 'Unable to list Docker images.' }
+    if (-not $imageId) { $missing = $true }
   }
   if ($missing) {
     if (-not (Test-Path -LiteralPath $Bundle)) {
@@ -19,5 +20,5 @@ try {
   }
   docker compose up -d --wait --wait-timeout 360
   if ($LASTEXITCODE -ne 0) { throw 'Services failed to become healthy. Check: docker compose logs backend' }
-  Write-Host 'Website: http://localhost:5180  |  Stop: docker compose down'
+  Write-Host 'Website: http://localhost:5181  |  Stop: docker compose down'
 } finally { Pop-Location }
