@@ -6,6 +6,8 @@ export interface ClassificationResult {
   metadata: { age: number; sex: string; site: string }
   input_policy: string; tta: boolean; elapsed_ms: number; limitations: string[]
   input_hash: string
+  decision_scores?: Record<string, number>
+  positive_categories?: string[]
 }
 
 export interface ExplanationResponse {
@@ -20,8 +22,9 @@ export interface ExplanationRequest {
   image: Blob; age: number; sex: string; site: string; targetClass?: string; fold?: number
   baseline: 'blur' | 'zero'; nSteps: number; includeMetadata: boolean; signal: AbortSignal
 }
-export async function classify(image: Blob, age: number, sex: string, site: string, signal: AbortSignal): Promise<ClassificationResult> {
+export async function classify(image: Blob, age: number, sex: string, site: string, signal: AbortSignal, clinical?: Blob): Promise<ClassificationResult> {
   const body = new FormData()
+  if (clinical) body.append('clinical', clinical, 'clinical.png')
   body.append('image', image, 'lesion.png'); body.append('age', String(age)); body.append('sex', sex); body.append('site', site)
   const response = await fetch('/api/v1/analyses', { method: 'POST', body, signal })
   const raw = await response.text()
