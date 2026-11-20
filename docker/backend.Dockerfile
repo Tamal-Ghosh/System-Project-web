@@ -15,6 +15,7 @@ WORKDIR /app
 COPY --chown=10001:10001 backend/inference_app.py backend/medicine_catalog.py ./
 COPY --chown=10001:10001 docker/check_model.py ./check_model.py
 COPY --chown=10001:10001 backend/database.py ./
+COPY --chown=10001:10001 backend/fit_temperature.py ./
 COPY --chown=10001:10001 backend/dermfm ./dermfm
 COPY --chown=10001:10001 backend/tests ./tests
 COPY docker/healthcheck.py /opt/healthcheck.py

@@ -8,6 +8,9 @@ export interface ClassificationResult {
   input_hash: string
   decision_scores?: Record<string, number>
   positive_categories?: string[]
+  calibration?: { applied: boolean; temperature: number | null; reason: string; artifact_id?: string }
+  uncalibrated_scores?: { label: string; score: number }[] | null
+  decision_scores_basis?: string
 }
 
 export interface ExplanationResponse {
