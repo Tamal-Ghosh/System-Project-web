@@ -11,6 +11,7 @@ from pathlib import Path
 import uuid
 
 import numpy as np
+from dermfm.loader import CLASSES
 
 
 def load_split(path):
@@ -19,10 +20,15 @@ def load_split(path):
         if not required.issubset(values.files):
             raise ValueError(f"{path} must contain probabilities, labels, and ids")
         probabilities = np.asarray(values["probabilities"], dtype=np.float64)
-        labels = np.asarray(values["labels"], dtype=np.int64)
+        raw_labels = np.asarray(values['labels'])
+        if not np.issubdtype(raw_labels.dtype, np.integer):
+            raise ValueError('Labels must be stored as integers')
+        labels = raw_labels.astype(np.int64)
         ids = np.asarray(values["ids"]).astype(str)
     if probabilities.ndim != 2 or probabilities.shape[1] != 11:
         raise ValueError(f"{path}: probabilities must have shape [N,11]")
+    if len(probabilities) == 0 or any(not item.strip() for item in ids.tolist()):
+        raise ValueError('Calibration split and image IDs must be nonempty')
     if labels.shape != (len(probabilities),) or ids.shape != (len(probabilities),):
         raise ValueError(f"{path}: labels and ids must align with probabilities")
     if len(set(ids.tolist())) != len(ids):
@@ -94,12 +100,44 @@ def main():
     parser.add_argument("--evaluate", required=True, type=Path)
     parser.add_argument("--model-version", required=True)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument('--training-index', required=True, type=Path, help='NPZ containing all training ids and patient_ids')
+    parser.add_argument('--input-policy', choices=['single_dermoscopic_duplicated'], required=True)
     args = parser.parse_args()
     fit_probabilities, fit_labels, fit_ids = load_split(args.fit)
     eval_probabilities, eval_labels, eval_ids = load_split(args.evaluate)
     overlap = set(fit_ids.tolist()) & set(eval_ids.tolist())
     if overlap:
         raise ValueError(f"Fit/evaluation leakage: {len(overlap)} overlapping IDs")
+    for name, labels in [('fit',fit_labels), ('evaluation',eval_labels)]:
+        if set(labels.tolist()) != set(range(11)):
+            raise ValueError(f'{name} split must cover all eleven classes')
+    with np.load(args.training_index, allow_pickle=False) as index:
+        training_image_array = index['ids'].astype(str)
+        training_patient_array = index['patient_ids'].astype(str)
+        if training_image_array.ndim != 1 or training_image_array.shape != training_patient_array.shape or len(training_image_array) == 0:
+            raise ValueError('Training index needs aligned, nonempty image and patient IDs')
+        training_ids = set(training_image_array.tolist())
+        training_patients = set(training_patient_array.tolist())
+        if any(not value.strip() for value in training_ids | training_patients):
+            raise ValueError('Training IDs must be nonempty')
+    patient_splits = []
+    for path, ids in [(args.fit,fit_ids),(args.evaluate,eval_ids)]:
+        with np.load(path, allow_pickle=False) as split:
+            patients = split['patient_ids'].astype(str)
+        if patients.shape != ids.shape or any(not item.strip() for item in patients.tolist()):
+            raise ValueError('Each calibration image requires a nonempty patient_id')
+        if set(ids.tolist()) & training_ids or set(patients.tolist()) & training_patients:
+            raise ValueError('Calibration data overlaps model training images or patients')
+        patient_splits.append(set(patients.tolist()))
+    if patient_splits[0] & patient_splits[1]:
+        raise ValueError('Fit/evaluation splits share patients')
+    for path in (args.fit,args.evaluate):
+        with np.load(path, allow_pickle=False) as split:
+            if (str(split['model_version'].item()) != args.model_version
+                    or str(split['input_policy'].item()) != args.input_policy
+                    or split['classes'].astype(str).tolist() != list(CLASSES)
+                    or str(split['tta'].item()) != 'mean_logits_original_hflip_vflip'):
+                raise ValueError('Prediction export does not match the model, input policy, class order or TTA')
 
     temperature = fit_temperature(fit_probabilities, fit_labels)
     before = metrics(eval_probabilities, eval_labels)
@@ -108,10 +146,16 @@ def main():
         raise ValueError("Independent evaluation did not improve both NLL and top-label ECE; artifact not written")
 
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "artifact_id": f"temperature-{uuid.uuid4().hex[:12]}",
         "model_version": args.model_version,
         "aggregation": "mean_member_probabilities",
+        "input_policy": args.input_policy,
+        "classes": list(CLASSES),
+        "tta": 'mean_logits_original_hflip_vflip',
+        "training_disjoint": True,
+        "patient_disjoint": True,
+        "training_index_sha256": file_sha256(args.training_index),
         "temperature": temperature,
         "fit_samples": len(fit_labels),
         "evaluation_samples": len(eval_labels),
