@@ -15,7 +15,15 @@ export default defineConfig(({ mode }) => {
         interval: 750,
         ignored: ['**/.npm-cache/**', '**/.tmp/**', '**/dist/**', '**/*.tsbuildinfo'],
       },
-      proxy: { '/api': apiTarget, '/health': apiTarget },
+      proxy: {
+        '/api': {
+          target: apiTarget,
+          changeOrigin: true,
+          timeout: 60000,
+          proxyTimeout: 60000,
+        },
+        '/health': apiTarget,
+      },
     },
   }
 })

@@ -7,7 +7,7 @@ case "$version" in
   *) echo 'Docker engine is not ready.' >&2; exit 1 ;;
 esac
 missing=0
-for image in dermascope-backend:e38-cpu-v1 dermascope-frontend:dev-v1; do
+for image in dermascope-backend:dermfm-cpu-v2 dermascope-frontend:dermfm-v2; do
   docker image inspect "$image" >/dev/null 2>&1 || missing=1
 done
 if [ "$missing" = 1 ]; then
@@ -19,4 +19,4 @@ if [ "$missing" = 1 ]; then
   docker image load -i "$bundle"
 fi
 docker compose up -d --wait --wait-timeout 360
-echo 'Website: http://localhost:5180'
+echo 'Website: http://localhost:5181'

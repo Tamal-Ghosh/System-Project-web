@@ -40,7 +40,8 @@ class Settings:
 class InferenceService:
     def __init__(self, settings, factory=None):
         self.settings = settings
-        torch.set_num_threads(4)
+        threads = int(os.getenv("TORCH_THREADS", os.getenv("OMP_NUM_THREADS", "8")))
+        torch.set_num_threads(threads)
         self.loaded = load_model(recipe_path=settings.recipe, checkpoint_path=settings.checkpoints[0],
             foundation_path=settings.foundation, device=settings.device, foundation_factory=factory)
         self.states = [read_checkpoint(path) for path in settings.checkpoints]
@@ -57,6 +58,7 @@ class InferenceService:
         start = time.perf_counter()
         torch.set_num_threads(4)
         derm, clinical, meta = prepare_inputs(image, age, sex, self.loaded.eval_transform, self.settings.device, site)
+        input_hash = hashlib.sha256(derm.detach().cpu().contiguous().numpy().tobytes() + meta.detach().cpu().contiguous().numpy().tobytes()).hexdigest()
         members = []
         with self.lock, torch.inference_mode():
             for checkpoint in self.states:
@@ -83,9 +85,12 @@ class InferenceService:
             ensemble=dict(member_count=len(members), member_scores=[p.tolist() for p in members],
                 agreement=float(np.mean([int(p.argmax()) == winner for p in members])) if len(members)>1 else None),
             input_policy='single_dermoscopic_duplicated', metadata=dict(age=age, sex=sex, site=site or 'unknown'), tta=self.settings.tta,
+            input_hash=input_hash,
             checkpoint_epochs=[int(c['epoch']) for c in self.states],
             elapsed_ms=round((time.perf_counter()-start)*1000),
             limitations=['Single-image adaptation has not been validated against paired-view training.'] +
                 ([] if self.calibration else ['Class scores are not calibrated clinical risk.']) +
                 (['Body site was encoded as unknown.'] if site in ('unknown', '', None) else []),
-            unavailable=['xai', 'ood', 'image_quality', 'clinical_next_step'], persistence='not_saved')
+            unavailable=['ood', 'image_quality', 'clinical_next_step'],
+            capabilities=dict(xai=['integrated_gradients', 'metadata_shapley'],
+                grad_cam='not_implemented', shap='not_implemented', attention='not_implemented'), persistence='not_saved')

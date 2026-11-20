@@ -15,10 +15,15 @@ class ApiTests(unittest.TestCase):
             response=client.post('/api/v1/analyses',data={'age':'40','sex':'female'},files={'image':('test.png',image_bytes(),'image/png')})
             self.assertEqual(response.status_code,200,response.text)
             self.assertEqual(len(response.json()['scores']),11)
+            self.assertEqual(len(response.json()['input_hash']),64)
             invalid=client.post('/api/v1/analyses',data={'age':'-1','sex':'female'},files={'image':('test.png',image_bytes(),'image/png')})
             self.assertEqual(invalid.status_code,422)
             broken=client.post('/api/v1/analyses',data={'age':'20','sex':'male'},files={'image':('bad.png',b'bad','image/png')})
             self.assertEqual(broken.status_code,422)
+            invalid_explanation=client.post('/api/v1/explanations',data={'age':'40','sex':'female','target_class':'NOT_A_CLASS'},files={'image':('test.png',image_bytes(),'image/png')})
+            self.assertEqual(invalid_explanation.status_code,422)
+            unknown_method=client.post('/api/v1/explanations',data={'age':'40','sex':'female','method':'grad_cam'},files={'image':('test.png',image_bytes(),'image/png')})
+            self.assertEqual(unknown_method.status_code,422)
             with patch.object(service,'predict',side_effect=RuntimeError('internal')):
                 with self.assertLogs('inference_app',level='ERROR'):
                     failed=client.post('/api/v1/analyses',data={'age':'20','sex':'male'},files={'image':('test.png',image_bytes(),'image/png')})
