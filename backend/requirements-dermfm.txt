@@ -8,3 +8,4 @@ transformers>=4.40
 ftfy>=6
 regex>=2024
 tqdm>=4.66
+captum>=0.7,<1
