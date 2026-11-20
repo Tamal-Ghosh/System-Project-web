@@ -1,0 +1,9 @@
+# Isolated calibration branch test stack; preserves the tested model-only images.
+name: dermascope-calibration
+services:
+  backend:
+    image: dermascope-backend:calibration-dev
+  frontend:
+    image: dermascope-frontend:calibration-dev
+    ports: !override
+      - "127.0.0.1:5182:5173"

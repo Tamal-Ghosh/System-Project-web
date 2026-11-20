@@ -56,8 +56,8 @@ export function CalibrationPanel() {
       <ReliabilityDiagram evidence={evidence} />
       <div className="calibration-method-card">
         <div className="calibration-card-heading"><div><h3>What was measured</h3><p>{evidence.model_family}</p></div><CheckCircle2 size={20} /></div>
-        <dl className="calibration-details"><div><dt>Evaluation scope</dt><dd>{evidence.scope}</dd></div><div><dt>Evidence type</dt><dd>Model-level, out-of-fold</dd></div><div><dt>Live score scaling</dt><dd>{evidence.temperature_scaling.applied ? `Applied · T=${evidence.temperature_scaling.temperature?.toFixed(3)}` : 'Not applied'}</dd></div></dl>
-        {evidence.temperature_scaling.applied ? <div className="temperature-notice temperature-notice--active"><CheckCircle2 size={18} /><div><strong>Temperature scaling active</strong><p>{evidence.temperature_scaling.reason}</p></div></div> : <div className="temperature-notice"><AlertTriangle size={18} /><div><strong>Temperature scaling unavailable</strong><p>{evidence.temperature_scaling.reason}</p></div></div>}
+        <dl className="calibration-details"><div><dt>Evaluation scope</dt><dd>{evidence.scope}</dd></div><div><dt>Evidence type</dt><dd>Model-level, out-of-fold · paired images</dd></div><div><dt>Live score scaling</dt><dd>{evidence.temperature_scaling.applied ? `Applied · T=${evidence.temperature_scaling.temperature?.toFixed(3)}` : 'Not applied'}</dd></div></dl>
+        {evidence.temperature_scaling.applied && <div className="temperature-notice temperature-notice--active"><CheckCircle2 size={18} /><div><strong>Temperature scaling active</strong><p>{evidence.temperature_scaling.reason}</p></div></div>}
       </div>
     </div>
     <div className="calibration-limitations"><h3>Interpret with care</h3><ul>{evidence.limitations.map(item => <li key={item}>{item}</li>)}</ul></div>

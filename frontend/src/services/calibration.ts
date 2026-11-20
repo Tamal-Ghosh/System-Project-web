@@ -10,6 +10,7 @@ export interface CalibrationEvidence {
   status: 'measured_oof'
   artifact_id: string
   model_family: string
+  model_version: string
   scope: string
   sample_count: number
   class_count: number
