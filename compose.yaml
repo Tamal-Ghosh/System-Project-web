@@ -1,24 +1,16 @@
-name: dermascope-dev
+name: dermascope-e55
 services:
   backend:
-    image: dermascope-backend:e38-cpu-v1
+    image: dermascope-backend:dermfm-cpu-v2
     platform: linux/amd64
     pull_policy: never
     init: true
     environment:
-      DERMFM_RECIPE: /opt/models/assets/recipe.json
-      DERMFM_FOUNDATION: /opt/models/foundation
-      DERMFM_CHECKPOINTS: /opt/models/assets/fold0_best.pth;/opt/models/assets/fold1_best.pth;/opt/models/assets/fold2_best.pth;/opt/models/assets/fold3_best.pth;/opt/models/assets/fold4_best.pth
+      E55_BUNDLE_PATH: /opt/models/dermfm
       DERMFM_DEVICE: cpu
       DERMFM_TTA: "true"
       HF_HUB_OFFLINE: "1"
       PYTHONDONTWRITEBYTECODE: "1"
-      WATCHFILES_FORCE_POLLING: "true"
-    volumes:
-      - type: bind
-        source: ./backend
-        target: /app
-        read_only: true
     expose:
       - "8000"
     command: ["python", "-m", "uvicorn", "inference_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app"]
@@ -30,29 +22,18 @@ services:
       retries: 8
     stop_grace_period: 60s
   frontend:
-    image: dermascope-frontend:dev-v1
+    image: dermascope-frontend:dermfm-v2
     platform: linux/amd64
     pull_policy: never
     init: true
     depends_on:
       backend:
         condition: service_healthy
-    environment:
-      API_PROXY_TARGET: http://backend:8000
-      WATCH_POLLING: "true"
-    volumes:
-      - type: bind
-        source: ./frontend
-        target: /app
-      - frontend_node_modules:/app/node_modules
     ports:
-      - "127.0.0.1:${WEB_PORT:-5180}:5173"
-    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173", "--strictPort"]
+      - "127.0.0.1:${WEB_PORT:-5181}:5173"
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:5173/"]
       interval: 15s
       timeout: 30s
       start_period: 60s
       retries: 8
-volumes:
-  frontend_node_modules:
