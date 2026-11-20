@@ -1,12 +1,12 @@
-FROM node:24-bookworm-slim
+FROM node:24-bookworm-slim AS build
 ENV NPM_CONFIG_CACHE=/tmp/npm-cache
 WORKDIR /app
 COPY --chown=node:node frontend/package.json frontend/package-lock.json ./
-RUN npm ci && node -e "require('fs').writeFileSync('node_modules/.dermascope-lock',require('crypto').createHash('sha256').update(require('fs').readFileSync('package-lock.json')).digest('hex'))" \
-    && chown -R node:node /app
+RUN npm ci
 COPY --chown=node:node frontend/ ./
-COPY docker/frontend-entrypoint.cjs /opt/frontend-entrypoint.cjs
-USER node
+RUN npm run build
+
+FROM nginxinc/nginx-unprivileged:stable-alpine
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 5173
-ENTRYPOINT ["node", "/opt/frontend-entrypoint.cjs"]
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173", "--strictPort"]
