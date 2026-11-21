@@ -5,6 +5,7 @@ import json
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torch.utils.checkpoint import checkpoint
 
 CLASSES = ("AKIEC", "BCC", "BEN_OTH", "BKL", "DF", "INF", "MAL_OTH", "MEL", "NV", "SCCKA", "VASC")
 SITES = ("foot", "genital", "hand", "head_neck_face", "lower_extremity", "trunk", "upper_extremity")
@@ -66,7 +67,15 @@ class DermFMFusion(nn.Module):
         self.backbone.eval()
         return self
     def encode(self, image):
-        features = self.backbone(image)
+        # Integrated Gradients needs input gradients through the frozen visual
+        # foundation. Checkpointing discards the large transformer activation
+        # stack after the forward pass and rebuilds it during backward, which
+        # keeps an on-demand explanation within the local Docker memory limit.
+        # Normal prediction stays on the direct, faster inference path.
+        if torch.is_grad_enabled() and image.requires_grad:
+            features = checkpoint(self.backbone, image, use_reentrant=False)
+        else:
+            features = self.backbone(image)
         if isinstance(features, (tuple, list)):
             features = features[0]
         return F.normalize(features.float(), dim=-1)

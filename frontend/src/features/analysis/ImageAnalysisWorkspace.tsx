@@ -22,12 +22,13 @@ export function ImageAnalysisWorkspace() {
   const { image, loading, error, load, clear, region, patientName, setPatientName, patientId, setPatientId, age, setAge, sex, setSex, site, setSite, result, setResult } = useAnalysisSession()
   const [isClassifying, setIsClassifying] = useState(false)
   const [requestError, setRequestError] = useState('')
+  const [analysisImage, setAnalysisImage] = useState<Blob | undefined>()
   const [reportImageSnapshot, setReportImageSnapshot] = useState<string | null>(null)
   const controller = useRef<AbortController | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     controller.current?.abort()
-    setResult(null); setReportImageSnapshot(null); setRequestError(''); setIsClassifying(false)
+    setResult(null); setAnalysisImage(undefined); setReportImageSnapshot(null); setRequestError(''); setIsClassifying(false)
     return () => controller.current?.abort()
   }, [image, region, patientName, patientId, age, sex, site, setResult])
 
@@ -44,7 +45,7 @@ export function ImageAnalysisWorkspace() {
     }
     const active = new AbortController()
     controller.current?.abort(); controller.current = active
-    setIsClassifying(true); setRequestError(''); setResult(null)
+    setIsClassifying(true); setRequestError(''); setResult(null); setAnalysisImage(undefined)
     try {
       const bounds = region ? regionBounds(region, image.width, image.height) : { x: 0, y: 0, width: image.width, height: image.height }
       const canvas = document.createElement('canvas')
@@ -56,8 +57,7 @@ export function ImageAnalysisWorkspace() {
       if (active.signal.aborted) return
       const response = await classify(blob, Number(age), sex, site, active.signal)
       if (active.signal.aborted) return
-      setReportImageSnapshot(createReportSnapshot(canvas))
-      setResult(response)
+      setAnalysisImage(blob); setReportImageSnapshot(createReportSnapshot(canvas)); setResult(response)
       requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
     } catch (failure) {
       if (!active.signal.aborted) setRequestError(failure instanceof Error ? failure.message : 'Classification failed. Please retry.')
@@ -72,6 +72,6 @@ export function ImageAnalysisWorkspace() {
       isClassifying={isClassifying} hasStartedClassification={!!result} />
     {isClassifying && <p role="status">Running model analysis…</p>}
     {requestError && <p className="image-error" role="alert">{requestError}</p>}
-    {result && <div ref={resultsRef} className="classification-reveal-container"><AnalysisInspector hasImage={!!image} result={result} /><DoctorAssessmentPanel key={result.analysis_id} result={result} patientName={patientName.trim()} patientId={patientId.trim()} imageSnapshot={reportImageSnapshot} /></div>}
+    {result && <div ref={resultsRef} className="classification-reveal-container"><AnalysisInspector hasImage={!!image} result={result} image={analysisImage} age={age} sex={sex} site={site} /><DoctorAssessmentPanel key={result.analysis_id} result={result} patientName={patientName.trim()} patientId={patientId.trim()} imageSnapshot={reportImageSnapshot} /></div>}
   </div>
 }
