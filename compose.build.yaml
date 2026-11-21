@@ -1,0 +1,12 @@
+# Publisher machine only. Consumer machines need only compose.yaml + loaded images.
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      additional_contexts:
+        model_assets: ${MODEL_ASSETS_DIR:-./docker/model-assets}
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile

@@ -1,0 +1,11 @@
+-r requirements.txt
+# Also put the pinned DermFM-Zero source src directory on PYTHONPATH.
+# Do not install generic open-clip-torch in its place.
+timm==1.0.30
+huggingface-hub>=0.24
+safetensors>=0.4
+transformers>=4.40
+ftfy>=6
+regex>=2024
+tqdm>=4.66
+captum>=0.7,<1

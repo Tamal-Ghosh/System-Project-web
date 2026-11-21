@@ -91,7 +91,10 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
   flex: none;
 }
 .clinical-viewer-footer:has(.viewport-overlay-controls) {
-  padding: 10px 16px 12px;
+  padding: 14px 16px 16px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
 }
 .clinical-viewer-footer > span { font-size: 13px; color: var(--muted); }
 .image-view-switch { display: flex; gap: 3px; padding: 3px; border: 1px solid var(--color-line); border-radius: 6px; }
@@ -127,6 +130,26 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
 .method-switch { display: flex; padding: 3px; border: 1px solid var(--color-line); border-radius: 6px; margin-top: 20px; }
 .method-switch button { flex: 1; min-height: 32px; border: 0; border-radius: 4px; background: none; color: #536b85; font-size: 14px; }
 .method-switch button.selected { background: #e8f7f4; color: #00796d; }
+.xai-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.xai-controls label { display: grid; gap: 6px; color: #60748c; font-size: 12px; }
+.xai-controls label:first-child { grid-column: 1 / -1; }
+.xai-controls select { min-width: 0; height: 36px; border: 1px solid var(--color-line); border-radius: 6px; padding: 0 8px; background: white; color: #243b53; }
+.analysis-inspector .primary-button { width: 100%; min-height: 38px; border: 0; border-radius: 6px; background: #087f73; color: white; font-weight: 600; cursor: pointer; }
+.analysis-inspector .primary-button:disabled { opacity: .55; cursor: wait; }
+.xai-preview { position: relative; width: min(100%, 360px); aspect-ratio: 1; overflow: hidden; border-radius: 9px; margin: 16px auto 10px; background: #111; }
+.xai-preview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.xai-preview .xai-heatmap { background: linear-gradient(90deg, #182a88, #28bdd0, #ffb72b, #e72c19); mask-size: 100% 100%; -webkit-mask-size: 100% 100%; mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; }
+.xai-view-switch { display: flex; justify-content: center; gap: 6px; margin: 8px 0 14px; }
+.xai-view-switch button { border: 1px solid var(--color-line); border-radius: 5px; padding: 5px 10px; background: white; color: #536b85; }
+.xai-view-switch button[aria-pressed="true"] { background: #e8f7f4; color: #00796d; }
+.xai-legend { display: flex; align-items: center; gap: 9px; color: #60748c; font-size: 12px; margin: 10px 0; }
+.xai-legend span { width: 70px; height: 10px; border-radius: 6px; background: linear-gradient(90deg, #172a88, #28bdd0, #ffb72b, #e72c19); }
+.metadata-attribution { border-top: 1px solid var(--color-line); padding-top: 14px; margin-top: 14px; }
+.metadata-attribution h3 { font-size: 15px; }.metadata-attribution p { color: #60748c; font-size: 12px; margin: 4px 0 10px; }
+.metadata-bar { display: grid; grid-template-columns: 44px 1fr 70px; align-items: center; gap: 8px; font-size: 12px; margin: 7px 0; }
+.metadata-bar > div { height: 8px; border-radius: 5px; background: #edf1f5; }.metadata-bar i { display: block; height: 100%; border-radius: 5px; background: #16a085; }.metadata-bar i.negative { background: #db665c; }
+.metadata-bar strong { text-align: right; font-variant-numeric: tabular-nums; }
+.xai-about { margin-top: 14px; border-top: 1px solid var(--color-line); padding-top: 12px; color: #60748c; font-size: 12px; }.xai-about summary { cursor: pointer; color: #30465d; font-weight: 600; }
 .disabled-range { display: flex; flex-wrap: wrap; font-size: 13px; gap: 10px; color: #60748c; }
 .disabled-range > span { margin-left: auto; }.disabled-range input { width: 100%; accent-color: #008579; }
 .uncertainty-rows { display: grid; margin: 12px 0 18px; }
@@ -307,9 +330,10 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
 
 /* Action Bar centered in footer below the lesion image container */
 .viewport-overlay-controls {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
+  transform: none;
+  width: 100%;
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -543,3 +567,28 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
 .topbar .dashboard-title { margin: 0; font-size: clamp(24px, 3vw, 32px); line-height: 1.15; font-weight: 700; }
 .viewer-mode-actions { flex: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
 .viewer-mode-actions > .button { margin-inline-start: auto; }
+
+/* Model input and result integration */
+.patient-inputs { display:flex; flex-wrap:wrap; align-items:end; gap:20px; padding:20px 24px; border:1px solid #dce5ef; border-radius:14px; background:#fff; }
+.patient-inputs label { display:grid; gap:8px; color:#183049; font-weight:600; }
+.patient-inputs input,.patient-inputs select { width:180px; min-height:44px; padding:8px 12px; background:white; color:#183049; border:1px solid #cbd9e6; border-radius:8px; font:inherit; }
+.patient-inputs p { color:#526c89; margin:0 0 10px; flex:1 1 240px; }
+.classification-results h3 { font-size:26px; margin:0 0 8px; }
+.class-score { display:grid; grid-template-columns:90px minmax(80px,1fr) 64px; align-items:center; gap:14px; margin:16px 0; }
+.class-score progress { width:100%; height:10px; accent-color:#008e82; }
+.class-score strong { text-align:right; font-size:14px; }
+.inspector-provenance strong { overflow-wrap:anywhere; }
+
+.patient-inputs--inline { display:flex; flex-wrap:wrap; padding:0; border:0; border-radius:0; gap:14px; align-items:center; flex:0 1 auto; min-width:0; }
+.patient-inputs--inline label { display:flex; align-items:center; gap:8px; font-size:14px; white-space:nowrap; }
+.patient-inputs--inline input { width:96px; }
+.patient-inputs--inline select { width:138px; }
+.patient-inputs--inline input,.patient-inputs--inline select { min-height:40px; padding:7px 10px; }
+
+@media (max-width: 600px) {
+  .viewport-overlay-controls { justify-content:flex-start; }
+  .patient-inputs--inline { flex-wrap:wrap; flex:1 1 100%; }
+  .viewport-overlay-controls > .viewport-action-btn { flex:0 1 auto; min-height:44px; }
+}
+
+.patient-inputs--inline select[name="site"] { width:190px; max-width:100%; }
