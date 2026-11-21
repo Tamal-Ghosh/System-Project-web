@@ -1,98 +1,40 @@
-## Docker development
+# DermaInsight E38
 
-See [docker/README.md](docker/README.md). The prebuilt backend image contains the
-full E38 foundation and all five adapters. Once the publisher has built/exported
-the images, another PC can use `RUN_DOCKER.cmd` with that image bundle, without
-installing Python/Node or downloading weights separately. The image bundle is
-not in Git and no registry image has been published.
+This repository contains a local research interface for the E38 skin-lesion model. The active inference path is a DermFM visual transformer with LoRA fold adapters, fused with metadata. The service switches adapters on a shared model and averages probabilities across one or five folds. Horizontal and vertical test-time augmentation (TTA) can be enabled by configuration.
 
-> **E38 model integration (development):** use `run_inference.ps1` for the new backend. The older `start_app.bat` still starts legacy ResNet50.
-> Setup and tests: [backend/dermfm/INTEGRATION.md](backend/dermfm/INTEGRATION.md).
+The API accepts one dermoscopic image, age, sex and an optional lesion site. The current single-image adapter duplicates that image into both model branches; this differs from paired-view training and has not been validated as an equivalent clinical workflow. Outputs are model scores, not diagnoses.
 
-# DermaInsight AI: Clinical Research & Skin Lesion Analysis Platform
+## Active features
 
-DermaInsight AI is a modern clinical decision-support web application for dermatological skin lesion screening and research. Powered by a PyTorch **ResNet50** deep convolutional neural network trained on the **HAM10000** dataset, the system integrates **Uncertainty Quantification (Monte Carlo Dropout)**, **Explainable AI (Grad-CAM)**, **Lesion Boundary Segmentation**, and an **Interactive AI Clinical Assistant**.
+- E38 11-class predictions, uncertainty summaries and optional TTA.
+- On-demand Integrated Gradients for one fold's raw class logit.
+- Exact metadata Shapley values grouped into age, sex and site.
+- Offline faithfulness evaluation in `backend/scripts/xai_eval.py`.
 
----
+Grad-CAM, pixel-level SHAP, MC dropout, segmentation and the clinical assistant are legacy or not implemented in this active E38 path.
 
-## 🌟 Key Features
+## Run
 
-1. **Skin Lesion Classification (HAM10000 7-Class Model)**
-   - **Architecture:** PyTorch ResNet50 with custom classification head (`Dropout(0.4) -> Linear(2048, 512) -> ReLU -> BatchNorm1d(512) -> Dropout(0.2) -> Linear(512, 7)`).
-   - **Trained Performance:** 71.3% Balanced Accuracy (Epoch 36).
-   - **Class Coverage:**
-     - `akiec` — Actinic Keratoses & Intraepithelial Carcinoma
-     - `bcc` — Basal Cell Carcinoma
-     - `bkl` — Benign Keratosis-like Lesions
-     - `df` — Dermatofibroma
-     - `mel` — Melanoma
-     - `nv` — Melanocytic Nevi
-     - `vasc` — Vascular Lesions
+Install the model environment documented in [backend/dermfm/INTEGRATION.md](backend/dermfm/INTEGRATION.md), including the external pinned foundation and adapter assets. Then launch the E38 API from PowerShell:
 
-2. **Uncertainty Quantification & Predictability**
-   - **Monte Carlo Dropout (Epistemic Uncertainty):** Measures stochastic model disagreement over test-time passes.
-   - **Normalized Predictive Entropy:** Shannon entropy metric evaluating decision ambiguity.
-   - **Separation Margin:** Probability difference between top prediction and runner-up.
-   - **Clinical Reliability Tiers:** Dynamic categorization into `High`, `Moderate`, or `Low` reliability with evidence-based recommendations.
-
-3. **Explainable AI (Dual Engine: Grad-CAM & SHAP)**
-   - **Grad-CAM (Convolutional Localization):** Visual explanation extracted from ResNet50's final convolutional layer (`layer4[-1].conv3`), highlighting macroscopic feature regions influencing predictions.
-   - **SHAP (Game-Theoretic Feature Attribution):** Path-Integrated Shapley Additive exPlanations measuring pixel-level cooperative game theory attributions. Breaks down into **Positive Supporting Evidence (%)** and **Negative Counter-Evidence (%)** with custom diverging colormap overlays.
-   - Interactive dual-view comparison and real-time opacity controls for both explainability methods.
-
-4. **Lesion Boundary Segmentation & Morphometrics**
-   - Adaptive Otsu thresholding with morphological boundary smoothing.
-   - Clinical shape analysis: Area ($px$), Perimeter ($px$), and Isoperimetric Circularity Index ($4\pi \times \frac{\text{Area}}{\text{Perimeter}^2}$) for ABCDE asymmetry screening.
-
-5. **Interactive Lesion Annotation Canvas**
-   - Draw or box specific Regions of Interest (ROI) directly on uploaded dermoscopic imagery before running inference.
-
-6. **AI Clinical Decision-Support Assistant**
-   - Interactive research chatbot grounded in model confidence, Grad-CAM rationale, and clinical guidelines.
-
----
-
-## 🏗️ Architecture & Technology Stack
-
-- **Frontend:** React 18, TypeScript, Tailwind CSS, Lucide Icons, Vite
-- **Backend:** Python FastAPI, PyTorch, Torchvision, OpenCV, NumPy, Pydantic
-- **Deployment & Networking:** Cloudflare Tunnel (`cloudflared`), Uvicorn ASGI
-
----
-
-## 🚀 Quick Start Guide
-
-### Prerequisites
-- Python 3.10+
-- Node.js 18+ & npm
-- PyTorch with CUDA or CPU support
-
-### 1. One-Click Launch (Windows)
-Double-click [`start_app.bat`](./start_app.bat) in the root directory to automatically launch both backend (port 8000) and frontend (port 3000).
-
-To create a public HTTPS Cloudflare tunnel for external sharing, double-click [`share_online.bat`](./share_online.bat).
-
-### 2. Manual Setup
-
-#### Backend Setup
-```bash
-cd backend
-pip install -r requirements.txt
-python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run_inference.ps1
 ```
 
-#### Frontend Setup
-```bash
-cd frontend
+In a second terminal:
+
+```powershell
+Set-Location .\frontend
 npm install
-npm run dev -- --host 0.0.0.0 --port 3000
+npm run dev
 ```
 
-Open your browser at:
-- **Web Application:** `http://localhost:3000`
-- **Swagger API Docs:** `http://localhost:8000/docs`
+The frontend dev server proxies `/api` and `/health` to `localhost:8000`. Do not use `start_app.bat` for the active E38 model; it starts the legacy backend.
 
----
+## XAI
 
-## ⚠️ Disclaimer
-DermaInsight AI is a research decision-support prototype intended for educational and investigational purposes. It is **not** an autonomous diagnostic device and all outputs require review by a certified healthcare professional.
+See [docs/xai.md](docs/xai.md) for methods, request format, validation limits and evaluation commands. The explanation endpoint is `POST /api/v1/explanations`; explanations are computed on demand and are not stored. They describe model behavior, not clinical correctness. Full deployment assets are required for real-model checks.
+
+## Legacy
+
+The legacy backend and older UI materials may mention ResNet50 and other prototype features. They do not describe the active E38 inference service. See [backend/dermfm/INTEGRATION.md](backend/dermfm/INTEGRATION.md) for model setup and [docker/README.md](docker/README.md) for the container workflow.

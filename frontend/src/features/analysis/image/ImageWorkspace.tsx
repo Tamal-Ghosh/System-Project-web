@@ -99,7 +99,7 @@ export function ImageWorkspace({
 
           {/* Image size indicator below the lesion image */}
           <div className="viewport-dimensions-badge">
-            <span>{image.width} Ã— {image.height} px</span>
+            <span>{image.width} × {image.height} px</span>
           </div>
         </div>
       ) : (
@@ -108,12 +108,12 @@ export function ImageWorkspace({
           <h3>Your image, in focus.</h3>
           <p>Drop an image here, or choose a file.</p>
           <button className="button button--primary" onClick={() => input.current?.click()} disabled={loading}>
-            <Upload size={16} />{loading ? 'Opening imageâ€¦' : 'Choose image'}
+            <Upload size={16} />{loading ? 'Opening image…' : 'Choose image'}
           </button>
-          <span>JPG, PNG or WebP Â· up to 20 MB</span>
+          <span>JPG, PNG or WebP · up to 20 MB</span>
         </div>
       )}
-      {loading && image && <div className="image-loading" role="status">Opening imageâ€¦</div>}
+      {loading && image && <div className="image-loading" role="status">Opening image…</div>}
     </div>
     {(error || previewError) && <p role="alert" className="image-error">{error || previewError}</p>}
     <div className="clinical-viewer-footer">
@@ -166,7 +166,7 @@ export function ImageWorkspace({
             {isClassifying ? (
               <>
                 <span className="button-spinner" aria-hidden="true" />
-                <span>Classifyingâ€¦</span>
+                <span>Classifying…</span>
               </>
             ) : (
               <>

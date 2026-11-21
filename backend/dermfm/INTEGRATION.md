@@ -4,7 +4,7 @@ The original loader baseline is commit a81497c. Subsequent changes are grouped
 by loader, preprocessing, inference service, API, dashboard and layout.
 The legacy ResNet backend remains in main.py. The new dashboard calls the E38
 inference_app API; start that app, not the legacy start_app.bat launcher.
-No database, login, XAI or chatbot implementation is included in this change.
+No database or login is included. On-demand Integrated Gradients and grouped metadata Shapley are available from `/api/v1/explanations` when Captum and the configured model assets are installed; Grad-CAM, pixel SHAP and attention attribution are not implemented.
 
 ## Full-weight portable package (current local setup)
 

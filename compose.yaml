@@ -11,6 +11,9 @@ services:
       DERMFM_CHECKPOINTS: /opt/models/assets/fold0_best.pth;/opt/models/assets/fold1_best.pth;/opt/models/assets/fold2_best.pth;/opt/models/assets/fold3_best.pth;/opt/models/assets/fold4_best.pth
       DERMFM_DEVICE: cpu
       DERMFM_TTA: "true"
+      DERMFM_XAI_TIMEOUT_SECONDS: "900"
+      OMP_NUM_THREADS: "8"
+      TORCH_THREADS: "8"
       HF_HUB_OFFLINE: "1"
       PYTHONDONTWRITEBYTECODE: "1"
       WATCHFILES_FORCE_POLLING: "true"
@@ -21,7 +24,10 @@ services:
         read_only: true
     expose:
       - "8000"
-    command: ["python", "-m", "uvicorn", "inference_app:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "/app"]
+    # Loading the model is memory intensive. Avoid a reloader process in the
+    # packaged local stack: source edits should be followed by a compose
+    # restart, rather than terminating an active XAI request mid-calculation.
+    command: ["python", "-m", "uvicorn", "inference_app:app", "--host", "0.0.0.0", "--port", "8000"]
     healthcheck:
       test: ["CMD", "python", "/opt/healthcheck.py"]
       interval: 15s
