@@ -5,6 +5,9 @@ services:
     platform: linux/amd64
     pull_policy: never
     init: true
+    env_file:
+      - path: ./backend/.env
+        required: false
     environment:
       DERMFM_RECIPE: /opt/models/assets/recipe.json
       DERMFM_FOUNDATION: /opt/models/foundation
