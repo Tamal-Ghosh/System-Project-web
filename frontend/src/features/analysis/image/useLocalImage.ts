@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Region } from './geometry'
 import { regionBounds } from './geometry'
 
-export interface LocalImage { src: string; element: HTMLImageElement; name: string; bytes: number; width: number; height: number }
+export interface LocalImage { src: string; element: HTMLImageElement; file: File; name: string; bytes: number; width: number; height: number }
 
 export function useLocalImage() {
   const [image, setImage] = useState<LocalImage | null>(null)
@@ -29,7 +29,7 @@ export function useLocalImage() {
       if (element.naturalWidth * element.naturalHeight > 40_000_000) {
         URL.revokeObjectURL(src); setLoading(false); setError('Choose an image with fewer than 40 million pixels.'); return
       }
-      setImage({ src, element, name: file.name, bytes: file.size, width: element.naturalWidth, height: element.naturalHeight })
+      setImage({ src, element, file, name: file.name, bytes: file.size, width: element.naturalWidth, height: element.naturalHeight })
       setLoading(false)
     }
     element.onerror = () => {
