@@ -1,0 +1,50 @@
+{
+  "version": "2026-11-25",
+  "scope": "Source-based educational overview; not patient-specific diagnosis or clinician validation",
+  "classes": {
+    "BCC": {
+      "en": "Basal cell carcinoma (BCC) is a skin cancer that usually grows slowly and rarely spreads to distant sites. It can still invade nearby tissue.\n\nA dermatologist assesses the lesion using its clinical appearance and examination, with tissue sampling when appropriate. A classifier label cannot confirm BCC or establish its stage. Management depends on the clinical findings, including location, depth and whether the lesion has returned.",
+      "bn": "বেসাল সেল কার্সিনোমা (BCC) ত্বকের এক ধরনের ক্যান্সার। এটি সাধারণত ধীরে বাড়ে এবং দূরবর্তী স্থানে ছড়িয়ে পড়া বিরল, তবে আশপাশের টিস্যুতে আক্রমণ করতে পারে।\n\nচর্মরোগ বিশেষজ্ঞ lesion-এর চেহারা ও পরীক্ষা দেখে মূল্যায়ন করেন; প্রয়োজন অনুযায়ী tissue sampling করা হতে পারে। শুধু model-এর label দিয়ে BCC নিশ্চিত করা বা stage বলা যায় না। Lesion কোথায়, কতটা গভীর এবং আগে হয়েছিল কি না—এসব clinical তথ্য অনুযায়ী management নির্ধারিত হয়।"
+    },
+    "MEL": {
+      "en": "Melanoma is a cancer arising in melanocytes, the cells that produce pigment. A change in a mole or pigmented area can be a reason for clinical evaluation.\n\nAssessment includes clinical history and skin examination; confirmation may involve biopsy. Pathology and staging guide management. The model label cannot establish invasion, stage or prognosis, and a single image cannot show how a lesion has changed over time.",
+      "bn": "মেলানোমা (MEL) হলো রঞ্জক উৎপাদনকারী melanocyte কোষ থেকে তৈরি ক্যান্সার। তিল বা রঞ্জকযুক্ত কোনো জায়গার চেহারা বদলে গেলে তা clinical evaluation-এর কারণ হতে পারে।\n\nমূল্যায়নে রোগের ইতিহাস ও ত্বকের পরীক্ষা গুরুত্বপূর্ণ; নিশ্চিত হওয়ার জন্য biopsy প্রয়োজন হতে পারে। Pathology ও staging management নির্ধারণে ব্যবহৃত হয়। Model-এর label থেকে invasion, stage বা prognosis বলা যায় না, আর একটি ছবি দিয়ে সময়ের সঙ্গে পরিবর্তন বোঝা যায় না।"
+    },
+    "NV": {
+      "en": "A melanocytic nevus (NV), commonly called a mole, is a benign proliferation of melanocytes. Moles vary in colour, size and clinical form.\n\nChanging or atypical lesions need interpretation in their clinical context because some can resemble melanoma. A model prediction of NV cannot establish benignity or rule out malignancy; a single image also cannot establish change over time.",
+      "bn": "মেলানোসাইটিক নেভাস (NV), যাকে সাধারণভাবে তিল বলা হয়, melanocyte কোষের একটি benign বৃদ্ধি। তিলের রং, আকার ও clinical form আলাদা হতে পারে।\n\nপরিবর্তিত বা অস্বাভাবিক lesion-এর ক্ষেত্রে clinical context ও পরীক্ষা গুরুত্বপূর্ণ, কারণ কিছু lesion মেলানোমার মতো দেখাতে পারে। Model NV বললেই benign নিশ্চিত হয় না বা malignancy বাদ যায় না। একটি ছবি থেকে সময়ের সঙ্গে পরিবর্তনও নির্ধারণ করা যায় না।"
+    },
+    "AKIEC": {
+      "en": "AKIEC groups actinic keratosis and intraepidermal carcinoma in the benchmark. It is a grouped label rather than one definite histological diagnosis.\n\nThe label does not resolve which entity is present or establish invasion. A clinician combines the examination and relevant history to decide whether further assessment is needed. The classification score alone cannot determine a procedure or treatment.",
+      "bn": "AKIEC label-এ actinic keratosis ও intraepidermal carcinoma একসঙ্গে রাখা হয়েছে। এটি একটি grouped label; একটিমাত্র নিশ্চিত histological diagnosis নয়।\n\nএই label থেকে কোন condition আছে বা invasion হয়েছে কি না নির্ধারণ করা যায় না। Clinical examination ও প্রয়োজনীয় ইতিহাস মিলিয়ে চিকিৎসক আরও মূল্যায়ন দরকার কি না ঠিক করেন। শুধু classification score দিয়ে কোনো procedure বা treatment নির্ধারণ করা যায় না।"
+    },
+    "SCCKA": {
+      "en": "SCCKA combines squamous cell carcinoma and keratoacanthoma in the benchmark. The classifier does not distinguish every histological subtype within this group.\n\nClinical and pathological evaluation are needed to clarify the actual lesion and guide management. A grouped model score does not determine depth, stage or a suitable treatment.",
+      "bn": "SCCKA label-এ squamous cell carcinoma ও keratoacanthoma একসঙ্গে রাখা হয়েছে। Classifier এই group-এর সব histological subtype আলাদা করে বলে না।\n\nআসল lesion সম্পর্কে পরিষ্কার ধারণা ও management-এর জন্য clinical এবং প্রয়োজন অনুযায়ী pathological evaluation গুরুত্বপূর্ণ। এই grouped model score থেকে depth, stage বা উপযুক্ত treatment নির্ধারণ করা যায় না।"
+    },
+    "BKL": {
+      "en": "BKL is a grouped benign keratinocytic label. Seborrhoeic keratosis is a common benign growth relevant to this group, but every BKL result should not be renamed as that condition.\n\nSeborrhoeic keratoses may look waxy, warty or stuck onto the skin, and some can resemble skin cancers. These are general reference descriptions, not features detected in the uploaded image. An uncertain lesion needs clinical evaluation.",
+      "bn": "BKL হলো benign keratinocytic lesion-এর একটি grouped label। Seborrhoeic keratosis এই group-এর সঙ্গে সম্পর্কিত একটি পরিচিত benign growth, তবে প্রতিটি BKL result-কে সেই নির্দিষ্ট condition বলা ঠিক নয়।\n\nSeborrhoeic keratosis মোমের মতো, আঁচিলের মতো বা ত্বকের ওপর লেগে থাকা growth-এর মতো দেখাতে পারে; কিছু ক্ষেত্রে skin cancer-এর সঙ্গেও মিল থাকতে পারে। এগুলো সাধারণ reference বর্ণনা—uploaded image-এ শনাক্ত বৈশিষ্ট্য নয়। অনিশ্চিত lesion-এর clinical evaluation দরকার।"
+    },
+    "DF": {
+      "en": "Dermatofibroma (DF) is a common benign fibrous skin lesion. It is often a firm papule or nodule, commonly on a limb.\n\nA dimple may appear when the lesion is pinched, but that is a physical examination finding and cannot be inferred from the classifier score. Many are recognized clinically; atypical or uncertain lesions may require further evaluation.",
+      "bn": "ডার্মাটোফাইব্রোমা (DF) ত্বকের একটি পরিচিত benign fibrous lesion। এটি অনেক সময় শক্ত ছোট papule বা nodule হিসেবে দেখা যায়, বিশেষ করে হাত-পায়ে।\n\nচাপ দিয়ে ধরলে কখনও dimple দেখা যেতে পারে; এটি শারীরিক পরীক্ষার finding, classifier score থেকে বোঝা যায় না। অনেক ক্ষেত্রে clinical examination-এ চেনা যায়, তবে অস্বাভাবিক বা অনিশ্চিত lesion-এর আরও মূল্যায়ন প্রয়োজন হতে পারে।"
+    },
+    "INF": {
+      "en": "INF groups inflammatory and infectious conditions. It is not one particular disease or organism.\n\nSymptoms, duration, examination and any indicated investigations help clarify the underlying condition. There is no single appearance or treatment for this entire class, and its model score cannot select an antimicrobial or anti-inflammatory medicine.",
+      "bn": "INF label-এ inflammatory ও infectious condition একসঙ্গে রাখা হয়েছে। এটি কোনো একটি নির্দিষ্ট রোগ বা জীবাণুর নাম নয়।\n\nআসল condition বোঝার জন্য symptoms, কত দিন ধরে আছে, examination এবং প্রয়োজন অনুযায়ী investigation বিবেচনা করা হয়। পুরো group-এর জন্য একটি appearance বা treatment প্রযোজ্য নয়। এই model score দিয়ে antimicrobial বা anti-inflammatory medicine বেছে নেওয়া যায় না।"
+    },
+    "BEN_OTH": {
+      "en": "BEN_OTH is a heterogeneous group of other benign proliferations, including collision lesions. The model label does not identify a single specific condition.\n\nIts different members do not share one definite appearance, prognosis or treatment. Clinical assessment and suitable supporting evidence are needed to identify the actual subtype; the benchmark taxonomy is not a clinical management guideline.",
+      "bn": "BEN_OTH হলো অন্যান্য benign proliferation-এর একটি বৈচিত্র্যময় group, যেখানে collision lesion-ও থাকতে পারে। Model-এর label কোনো একটি নির্দিষ্ট condition শনাক্ত করে না।\n\nGroup-এর সব lesion-এর appearance, prognosis বা treatment এক নয়। আসল subtype বোঝার জন্য clinical assessment ও উপযুক্ত supporting evidence দরকার; benchmark taxonomy কোনো clinical management guideline নয়।"
+    },
+    "MAL_OTH": {
+      "en": "MAL_OTH groups other malignant proliferations, including collision lesions, separately from the named melanoma, BCC and SCCKA groups.\n\nThe label does not identify a histological subtype or determine stage or prognosis. Clinical and pathological clarification depend on the actual lesion; the grouped score cannot specify a treatment or the next procedure.",
+      "bn": "MAL_OTH label-এ অন্যান্য malignant proliferation, যেমন collision lesion, রাখা হয়েছে। এটি আলাদা নামের melanoma, BCC ও SCCKA group থেকে পৃথক।\n\nএই label histological subtype শনাক্ত করে না বা stage ও prognosis নির্ধারণ করে না। আসল lesion অনুযায়ী clinical ও pathological clarification প্রয়োজন হয়; grouped score দিয়ে treatment বা পরের procedure নির্দিষ্ট করা যায় না।"
+    },
+    "VASC": {
+      "en": "VASC denotes a broad group of vascular lesions rather than one specific vascular diagnosis. The class score cannot identify the subtype.\n\nDifferent vascular lesions can have different causes, natural histories and management. The label must be interpreted with clinical context; the benchmark taxonomy alone cannot determine a treatment.",
+      "bn": "VASC label বলতে vascular lesion-এর একটি বড় group বোঝায়; এটি কোনো একটি নির্দিষ্ট vascular diagnosis নয়। Class score থেকে subtype শনাক্ত করা যায় না।\n\nবিভিন্ন vascular lesion-এর কারণ, স্বাভাবিক গতিপ্রকৃতি ও management আলাদা হতে পারে। Clinical context-এর সঙ্গে label ব্যাখ্যা করতে হবে; শুধু benchmark taxonomy দিয়ে treatment নির্ধারণ করা যায় না।"
+    }
+  }
+}
