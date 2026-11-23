@@ -2,6 +2,7 @@ import { ArrowLeft, BarChart3, ImageOff, Info } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAnalysisSession } from './AnalysisSession'
 import { regionBounds } from './image/geometry'
+import { CalibrationPanel } from './CalibrationEvidence'
 import { CropSensitivityPanel } from './CropSensitivityPanel'
 
 const modules = [
@@ -30,7 +31,7 @@ export function AnalysisPage() {
         <span className="module-nav-pill">{isSelected ? 'Active' : ''}</span>
       </button>
     })}</nav>
-      <section id="advanced-content" className="advanced-content" aria-label={module.label}><div className="eyebrow">{module.scope}</div><h2>{module.label}</h2><p className="muted">{module.description}</p>{module.id === 'crop' ? <CropSensitivityPanel /> : <><div className="advanced-unavailable"><BarChart3 size={28} strokeWidth={1.3} /><h3>No measured output available</h3><p>{module.requirement}</p><span className="unavailable-tag">Not connected</span></div><p className="inspector-disclosure"><Info size={15} />{module.scope === 'Model-level evidence' ? 'These results describe model evaluation; they are not a diagnosis for the current image.' : 'Case experiments use the selected image context; no experiment or clinical measurement has run.'}</p></>}</section>
+      <section id="advanced-content" className="advanced-content" aria-label={module.label}><div className="eyebrow">{module.scope}</div><h2>{module.label}</h2><p className="muted">{module.description}</p>{module.id === 'calibration' ? <CalibrationPanel /> : module.id === 'crop' ? <CropSensitivityPanel /> : <><div className="advanced-unavailable"><BarChart3 size={28} strokeWidth={1.3} /><h3>No measured output available</h3><p>{module.requirement}</p><span className="unavailable-tag">Not connected</span></div><p className="inspector-disclosure"><Info size={15} />{module.scope === 'Model-level evidence' ? 'These results describe model evaluation; they are not a diagnosis for the current image.' : 'Case experiments use the selected image context; no experiment or clinical measurement has run.'}</p></>}</section>
     </div>
   </div>
 }

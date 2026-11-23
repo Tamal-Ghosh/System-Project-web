@@ -1,0 +1,10 @@
+# Opt in only when a verified matching temperature artifact exists.
+services:
+  backend:
+    environment:
+      DERMFM_CALIBRATION: /opt/calibration/temperature.json
+    volumes:
+      - type: bind
+        source: ${CALIBRATION_ARTIFACT:?Set CALIBRATION_ARTIFACT to the validated temperature JSON}
+        target: /opt/calibration/temperature.json
+        read_only: true
