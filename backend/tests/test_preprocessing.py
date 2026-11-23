@@ -2,7 +2,7 @@ import io
 import unittest
 import torch
 from PIL import Image
-from dermfm.preprocessing import encode_metadata, decode_image
+from dermfm.preprocessing import encode_metadata, decode_image, assess_image_quality
 from dermfm.loader import SITES
 
 def image_bytes():
@@ -28,3 +28,19 @@ class PreprocessingTests(unittest.TestCase):
                 torch.testing.assert_close(values,expected)
         torch.testing.assert_close(encode_metadata(40,'female','unknown')[0,3:],torch.zeros(7))
         with self.assertRaises(ValueError): encode_metadata(40,'female','unsupported')
+
+    def test_assess_image_quality_sharp_vs_flat(self):
+        # A uniform flat image has 0 variance and should be flagged
+        flat_img = Image.new("RGB", (100, 100), color=(128, 128, 128))
+        flat_quality = assess_image_quality(flat_img)
+        self.assertEqual(flat_quality["status"], "rejected")
+        self.assertTrue(flat_quality["blur_detected"])
+
+        # An image with alternating high contrast lines has high variance
+        import numpy as np
+        arr = np.zeros((100, 100, 3), dtype=np.uint8)
+        arr[::2, :] = 255
+        sharp_img = Image.fromarray(arr)
+        sharp_quality = assess_image_quality(sharp_img)
+        self.assertEqual(sharp_quality["status"], "passed")
+        self.assertFalse(sharp_quality["blur_detected"])
