@@ -1,0 +1,8 @@
+services:
+  backend:
+    environment:
+      E55_BUNDLE_PATH: /opt/models/dermfm
+      DERMFM_DEVICE: cpu
+  frontend:
+    ports: !override
+      - "127.0.0.1:5181:5173"

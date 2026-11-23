@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: docker/backend.Dockerfile
       additional_contexts:
-        model_assets: ${MODEL_ASSETS_DIR:-./docker/model-assets}
+        model_assets: ${MODEL_ASSETS_DIR:-D:/DermascopeModelAssets/e55}
   frontend:
     build:
       context: .

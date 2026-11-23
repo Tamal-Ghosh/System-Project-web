@@ -72,8 +72,9 @@ export function AnalysisInspector({ hasImage, result, image, age, sex, site }: {
         <div className="inspector-section-heading"><div className="eyebrow">Model output</div><h2>Classification</h2><p>Start with the result. Inspect the evidence.</p></div>
         {result ? <div className="classification-results"><h3>{result.leading_class}</h3>
           <p>Leading model score: {((result.scores.find(item => item.label === result.leading_class)?.score ?? 0)*100).toFixed(1)}%</p>
+          {result.decision_scores && <details><summary>Threshold-mapped decision scores (not probabilities)</summary><p>Independent class thresholds can select multiple categories. These values do not sum to one.</p>{Object.entries(result.decision_scores).map(([label,score]) => <p key={label}>{label}: {score.toFixed(4)}{result.positive_categories?.includes(label) ? ' · above class threshold' : ''}</p>)}</details>}
           {[...result.scores].sort((a,b) => b.score-a.score).map(item => <div className="class-score" key={item.label}><span>{item.label}</span><progress value={item.score} max={1} aria-label={`${item.label} model score`} /><strong>{(item.score*100).toFixed(1)}%</strong></div>)}
-          <div className="inspector-provenance"><div><span>Model</span><strong>{result.model_version}</strong></div><div><span>Members / TTA</span><strong>{result.ensemble.member_count} / {result.tta ? 'On' : 'Off'}</strong></div><div><span>Storage</span><strong>Not saved</strong></div></div>
+          <div className="inspector-provenance"><div><span>Model</span><strong>DermFM</strong></div><div><span>Members / TTA</span><strong>{result.ensemble.member_count} / {result.tta ? 'On' : 'Off'}</strong></div><div><span>Storage</span><strong>Not saved</strong></div></div>
           {result.limitations.map(text => <p className="inspector-disclosure" key={text}><Info size={15} />{text}</p>)}
         </div> : <><Unavailable icon={BarChart3} title="No classification yet" text={hasImage ? 'Your image is ready for review. Model inference will appear here once the backend is connected.' : 'Add an image on the left to prepare an analysis.'} />
         <div className="inspector-provenance"><div><span>Model</span><strong>Not connected</strong></div><div><span>Result</span><strong>Not available</strong></div></div></>}
@@ -87,7 +88,8 @@ export function AnalysisInspector({ hasImage, result, image, age, sex, site }: {
             <label>Fold<select value={fold} onChange={event => setFold(event.target.value)}>{Array.from({length: result.ensemble.member_count}, (_, index) => <option key={index} value={index}>Fold {index}</option>)}</select></label>
             <label>Image baseline<select value={baseline} onChange={event => setBaseline(event.target.value as 'blur' | 'zero')}><option value="blur">Blurred image</option><option value="zero">Black image</option></select></label>
           </div>
-          <button type="button" className="primary-button" disabled={busy || !image} onClick={runExplanation}>
+          {result.model_version.startsWith('e55-') && <p>Explanation support for this DermFM configuration is not yet available.</p>}
+          <button type="button" className="primary-button" disabled={busy || !image || result.model_version.startsWith('e55-')} onClick={runExplanation}>
             {busy ? `${STAGE_LABEL[stage] || 'Explaining…'} (${elapsed}s)` : 'Explain'}
           </button>
           {busy && <p role="status" className="inspector-disclosure">Computing Integrated Gradients on CPU (5 steps). Progress: {STAGE_LABEL[stage] || 'running'}.</p>}
