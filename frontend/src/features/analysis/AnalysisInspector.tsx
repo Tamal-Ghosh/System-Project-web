@@ -112,6 +112,7 @@ export function AnalysisInspector({ hasImage, result, image, age, sex, site }: {
         <div className="inspector-section-heading"><div className="eyebrow">Know the limitations</div><h2>Uncertainty & quality</h2><p>Signals to review, not a single trust score.</p></div>
         <div className="uncertainty-rows">{[
           ['Predictive uncertainty', 'Normalized entropy / top-two margin', result ? `${result.uncertainty.normalized_entropy.toFixed(3)} / ${(result.uncertainty.top_two_margin*100).toFixed(1)} percentage points` : 'Not computed'],
+          ['Probability calibration', result?.calibration?.reason || 'Calibration status for this model and input policy', result ? (result.calibration?.applied ? `Temperature scaled · T=${result.calibration.temperature?.toFixed(3)}` : 'Not applied') : 'Not computed'],
           ['Model agreement', 'Fraction of ensemble members matching the leading class', result?.ensemble.agreement != null ? `${(result.ensemble.agreement*100).toFixed(0)}%` : 'Requires multiple members'],
           ['Image quality', 'Blur, glare and framing checks', 'Not checked'],
           ['Out-of-distribution', 'Compatibility with the input domain', 'Not evaluated'],

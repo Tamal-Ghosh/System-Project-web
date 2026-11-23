@@ -1,0 +1,88 @@
+{
+  "status": "measured_oof",
+  "artifact_id": "dermfm-multiscale-oof-c769f025",
+  "model_version": "e55-multiscale-c769f025f83f3f0f",
+  "model_family": "DermFM multiscale regions",
+  "scope": "Five-fold out-of-fold paired-image validation; not deployed single-image ensemble validation",
+  "sample_count": 5240,
+  "class_count": 11,
+  "metrics": {
+    "top_label_ece": 0.07143590649916927,
+    "brier_score": 0.3194219423254189
+  },
+  "reliability_bins": [
+    {
+      "lower": 0.2,
+      "upper": 0.3,
+      "count": 12,
+      "confidence": 0.2843097199996312,
+      "accuracy": 0.16666666666666666
+    },
+    {
+      "lower": 0.3,
+      "upper": 0.4,
+      "count": 84,
+      "confidence": 0.36303384105364483,
+      "accuracy": 0.25
+    },
+    {
+      "lower": 0.4,
+      "upper": 0.5,
+      "count": 193,
+      "confidence": 0.45712696008114,
+      "accuracy": 0.32642487046632124
+    },
+    {
+      "lower": 0.5,
+      "upper": 0.6,
+      "count": 322,
+      "confidence": 0.5481031200160151,
+      "accuracy": 0.4968944099378882
+    },
+    {
+      "lower": 0.6,
+      "upper": 0.7,
+      "count": 357,
+      "confidence": 0.6475929753119204,
+      "accuracy": 0.5742296918767507
+    },
+    {
+      "lower": 0.7,
+      "upper": 0.8,
+      "count": 434,
+      "confidence": 0.7504041628903507,
+      "accuracy": 0.6682027649769585
+    },
+    {
+      "lower": 0.8,
+      "upper": 0.9,
+      "count": 661,
+      "confidence": 0.8564772474242771,
+      "accuracy": 0.7503782148260212
+    },
+    {
+      "lower": 0.9,
+      "upper": 1.0,
+      "count": 3177,
+      "confidence": 0.9703195855832903,
+      "accuracy": 0.9106074913440353
+    }
+  ],
+  "source_files": {
+    "dermfm_calibration.csv": "16f3f29126871ccb8471c82113d14ef2c5c273b9c76f7dc504a715372428e581",
+    "reports/calibration_metrics.json": "628b2c984e59fa3aad695abef54629a9ef3fff57e2cc47fab3d4b697dc8de826",
+    "dermfm_raw.npz": "e6f66ddddf53c96ed5369bb157d705cd9dbf58d6448e6710a94130b5abb99753"
+  },
+  "temperature_scaling": {
+    "applied": false,
+    "temperature": null,
+    "reason": "The bundle provides labelled OOF predictions, but no independent labelled five-model ensemble fit/evaluation exports for the deployed single-image input policy."
+  },
+  "limitations": [
+    "Model-level evidence does not estimate correctness of one uploaded image.",
+    "OOF predictions use each held-out fold model, not the deployed five-model ensemble.",
+    "The report uses paired images; the website duplicates one dermoscopic image into both branches.",
+    "The 479 ensemble test predictions have no labels in this bundle.",
+    "Live probabilities remain unscaled until an independent, matching calibration artifact is supplied."
+  ]
+}

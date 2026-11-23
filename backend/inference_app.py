@@ -15,6 +15,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile, Backg
 from pydantic import BaseModel, Field, field_validator, model_validator
 from starlette.concurrency import run_in_threadpool
 from dermfm.preprocessing import MAX_BYTES, decode_image, encode_metadata
+from dermfm.calibration import get_calibration_evidence
 from dermfm.loader import CLASSES
 from dermfm.explain import explain_analysis, xai_available
 from database import (
@@ -217,6 +218,16 @@ def create_app(service_factory=None):
         app.state.service = None
     app = FastAPI(title="DermFM development API", lifespan=lifespan)
     gate = threading.Lock()
+    @app.get('/api/v1/model/calibration')
+    def calibration_evidence():
+        service = getattr(app.state, 'service', None)
+        if service is None:
+            raise HTTPException(503, 'Model is not ready; calibration evidence is unavailable.')
+        try:
+            return get_calibration_evidence(getattr(service, 'calibration', None), service.version)
+        except ValueError as exc:
+            raise HTTPException(503, str(exc)) from exc
+
     @app.get('/health/database')
     def database_health():
         result = check_database_connection()
