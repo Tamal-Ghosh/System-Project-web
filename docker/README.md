@@ -1,6 +1,6 @@
 # Docker development setup
 
-Branch: feature/docker-setup. No registry upload or Git push is required here.
+Branch: feature/model-integration. No registry upload or Git push is required here.
 
 ## What the other PC needs
 
@@ -14,7 +14,7 @@ RUN_DOCKER.cmd
 ```
 
 Linux/macOS: `sh docker/start.sh`. First run imports both images, including all
-model weights and dependencies. Later runs reuse them. Open http://localhost:5180.
+model weights and dependencies. Later runs reuse them. Open http://localhost:5181.
 If the images are already loaded, `docker compose up -d --wait --wait-timeout 360`
 is sufficient. A Git clone alone cannot supply an image that has not been built
 and distributed. No image has been published by this configuration.
@@ -22,12 +22,12 @@ and distributed. No image has been published by this configuration.
 ## One-time publisher build (Tamal's PC)
 
 Requires a working Docker engine, Python 3.13 (stdlib only for asset staging),
-the full deployment directory or ZIP, and build-time internet for base images
+the extracted deployment directory, and build-time internet for base images
 and package installation. It never downloads foundation weights from Hugging Face.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File docker/build.ps1 `
-  -Package 'E:\3-2\system 3200\trsnformer\E38_DermFM_Deployment_FULL_WEIGHTS.zip' -Export
+  -Package 'D:\DermascopeModelAssets\e55' -Export
 ```
 
 The script validates a strict model/source whitelist and pinned SHA256 checks,
@@ -41,39 +41,32 @@ as distributable. Local assets and archive outputs are ignored by Git.
 Manual Linux/macOS publisher equivalent:
 
 ```sh
-python3 docker/prepare_model_context.py --package /path/to/E38_DermFM_Deployment
+python3 docker/prepare_model_context.py --package /path/to/web_bundle
 # Requires Docker Compose additional-context support (Compose 2.17+).
 docker compose -f compose.yaml -f compose.build.yaml build
-docker run --rm --network none --pull never dermascope-backend:e38-cpu-v1 python check_model.py
+docker run --rm --network none --pull never dermascope-backend:dermfm-cpu-v2 python check_model.py
 docker compose up -d --wait --wait-timeout 360
 docker compose exec -T backend python -m unittest discover -s tests -v
 docker compose exec -T -e SMOKE_BASE_URL=http://frontend:5173 backend python /opt/smoke_test.py
-docker compose exec -T frontend npm run build
 mkdir -p docker/bundles
-docker save -o docker/bundles/dermascope-images.tar dermascope-backend:e38-cpu-v1 dermascope-frontend:dev-v1
+docker save -o docker/bundles/dermascope-images.tar dermascope-backend:dermfm-cpu-v2 dermascope-frontend:dermfm-v2
 ```
 
-## Development behavior
+## Packaged runtime behavior
 
-Both source trees are bind-mounted: frontend HMR and backend Python reload are
-enabled. No host weights or host model.local.json is mounted. The model is at
-/opt/models inside the image. The frontend uses backend:8000 on the Compose
-network; the browser uses the same-origin /api proxy. Only localhost:5180 is
-published. Native servers on 5173/8000 can remain running.
+The frontend is compiled during a multi-stage build and served by unprivileged
+Nginx. Node, npm, source files and node_modules are absent from the frontend runtime.
+No source bind mounts, dependency volumes or file polling are used. The backend
+contains its model at /opt/models/dermfm. Nginx proxies same-origin API requests to
+backend:8000. Only localhost:5181 is published.
 
-Container node_modules uses a named volume, never Windows node_modules. The
-frontend entrypoint compares package-lock.json hashes; changed dependencies
-trigger npm ci inside the container (this may need internet). Ordinary source
-edits require no downloads. Rebuild/re-export the backend image when Python
-requirements or the model assets change. After a new frontend image import, stop
-the stack and remove only its frontend_node_modules volume if dependencies need
-a clean refresh; `docker compose down -v` currently removes only that dependency
-volume. Revisit this before adding a database volume.
+Rebuild the affected image after source changes. Native npm run dev remains
+available for frontend development. Consumer startup does not install packages.
 
 Images target linux/amd64 CPU. Apple Silicon can emulate this platform but may be
 slow; native arm64 images require a separately tested build. Allow substantial
-RAM/disk in Docker Desktop; the archive contains about 1.7 GB of weights plus
-Python/Torch/Node layers. No GPU is required. Initial readiness can take minutes.
+RAM/disk in Docker Desktop; the model alone is approximately 1.24 GB, plus
+Python/Torch and runtime layers. No GPU is required. Initial readiness can take minutes.
 Healthchecks require status=ready, not merely HTTP 200.
 
 ```sh
