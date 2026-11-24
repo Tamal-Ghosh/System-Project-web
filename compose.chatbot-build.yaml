@@ -1,0 +1,10 @@
+# Local development build reuses the loaded model image; no duplicate weights.
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/chatbot.Dockerfile
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
