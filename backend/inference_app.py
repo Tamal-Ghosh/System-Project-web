@@ -21,6 +21,12 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from starlette.concurrency import run_in_threadpool
 from dermfm.preprocessing import MAX_BYTES, decode_image, encode_metadata
 from dermfm.calibration import get_calibration_evidence
+from dermfm.conformal import (
+    evaluate_conformal_prediction,
+    CALIBRATED_QUANTILES,
+    CLASS_METADATA,
+    MALIGNANT_CLASSES,
+)
 from dermfm.loader import CLASSES
 from dermfm.explain import explain_analysis, xai_available
 from database import (
@@ -302,6 +308,28 @@ def create_app(service_factory=None):
             return get_calibration_evidence(getattr(service, 'calibration', None), service.version)
         except ValueError as exc:
             raise HTTPException(503, str(exc)) from exc
+
+    @app.get('/api/v1/model/conformal')
+    def conformal_evidence():
+        return {
+            "method": "Adaptive Prediction Sets (APS)",
+            "sample_count": 5240,
+            "quantiles": CALIBRATED_QUANTILES,
+            "default_coverage": 0.95,
+            "classes": CLASS_METADATA,
+            "malignant_classes": list(MALIGNANT_CLASSES),
+        }
+
+    @app.post('/api/v1/conformal/evaluate')
+    def evaluate_conformal_endpoint(payload: dict):
+        scores = payload.get("scores")
+        coverage = float(payload.get("coverage", 0.95))
+        if not scores:
+            raise HTTPException(422, "Scores list or dictionary is required.")
+        try:
+            return evaluate_conformal_prediction(scores, coverage=coverage)
+        except Exception as exc:
+            raise HTTPException(422, str(exc)) from exc
 
     @app.get('/health/database')
     def database_health():
