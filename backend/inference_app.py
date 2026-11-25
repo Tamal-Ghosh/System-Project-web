@@ -5,13 +5,18 @@ import hashlib
 import json
 import logging
 import os
+import re
+import shutil
+import subprocess
+import tempfile
 import threading
 import time
 import uuid
 from functools import partial
+from pathlib import Path
 from typing import Literal
 from uuid import UUID
-from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile, BackgroundTasks
+from fastapi import FastAPI, File, Form, HTTPException, Query, Response, UploadFile, BackgroundTasks
 from pydantic import BaseModel, Field, field_validator, model_validator
 from starlette.concurrency import run_in_threadpool
 from dermfm.service import InferenceService, Settings
@@ -23,8 +28,10 @@ from database import (
     check_database_connection,
     create_doctor_assessment,
     create_prescription,
+    delete_doctor_assessment,
     list_doctor_assessments,
     list_prescriptions,
+    update_doctor_assessment,
 )
 from medicine_catalog import MedicineCatalogUnavailable, suggest_medicines
 
@@ -133,6 +140,74 @@ class DoctorAssessmentCreate(BaseModel):
     @classmethod
     def strip_text(cls, value):
         return value.strip() if isinstance(value, str) else value
+
+
+class DoctorAssessmentUpdate(BaseModel):
+    decision: Literal['agree', 'disagree', 'unsure']
+    confidence: int = Field(ge=1, le=5)
+    suspected_diagnosis: str | None = Field(default=None, max_length=200)
+    differential_diagnoses: list[str] = Field(default_factory=list, max_length=5)
+    clinical_note: str | None = Field(default=None, max_length=2000)
+    next_action: Literal[
+        'routine_follow_up', 'dermatology_referral', 'biopsy_consideration',
+        'additional_assessment', 'other'
+    ]
+
+    @field_validator('suspected_diagnosis', 'clinical_note', mode='before')
+    @classmethod
+    def strip_text(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+
+class ReportPdfRequest(BaseModel):
+    html: str = Field(min_length=1, max_length=2_500_000)
+    filename: str = Field(default='skin-lesion-report.pdf', max_length=120)
+
+
+def _find_headless_browser() -> str | None:
+    candidates = [
+        r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
+        r'C:\Program Files\Microsoft\Edge\Application\msedge.exe',
+        r'C:\Program Files\Google\Chrome\Application\chrome.exe',
+        r'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe',
+    ]
+    for candidate in candidates:
+        if os.path.isfile(candidate):
+            return candidate
+    for cmd in ('msedge', 'google-chrome', 'chromium', 'chromium-browser'):
+        found = shutil.which(cmd)
+        if found:
+            return found
+    return None
+
+
+def _render_html_to_pdf(html: str) -> bytes:
+    browser = _find_headless_browser()
+    if not browser:
+        raise RuntimeError('No headless browser available for PDF rendering.')
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp_dir:
+        html_path = Path(tmp_dir) / 'report.html'
+        pdf_path = Path(tmp_dir) / 'report.pdf'
+        profile_dir = Path(tmp_dir) / 'profile'
+        html_path.write_text(html, encoding='utf-8')
+        result = subprocess.run(
+            [
+                browser,
+                '--headless=new',
+                '--disable-gpu',
+                '--no-sandbox',
+                f'--user-data-dir={profile_dir}',
+                '--no-pdf-header-footer',
+                f'--print-to-pdf={pdf_path}',
+                'file:///' + str(html_path).replace('\\', '/'),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=25,
+        )
+        if result.returncode != 0 or not pdf_path.is_file():
+            raise RuntimeError('PDF rendering failed.')
+        return pdf_path.read_bytes()
 
     @field_validator('differential_diagnoses')
     @classmethod
@@ -254,6 +329,42 @@ def create_app(service_factory=None):
             return await run_in_threadpool(list_doctor_assessments, limit)
         except DatabaseUnavailable as exc:
             raise HTTPException(503, str(exc)) from exc
+
+    @app.put('/api/v1/assessments/{assessment_id}')
+    async def update_assessment(assessment_id: UUID, assessment: DoctorAssessmentUpdate):
+        try:
+            updated = await run_in_threadpool(update_doctor_assessment, str(assessment_id), assessment.model_dump())
+            if not updated:
+                raise HTTPException(404, 'Report not found.')
+            return updated
+        except DatabaseUnavailable as exc:
+            raise HTTPException(503, str(exc)) from exc
+
+    @app.delete('/api/v1/assessments/{assessment_id}')
+    async def remove_assessment(assessment_id: UUID):
+        try:
+            deleted = await run_in_threadpool(delete_doctor_assessment, str(assessment_id))
+            if not deleted:
+                raise HTTPException(404, 'Report not found.')
+            return {'deleted': True}
+        except DatabaseUnavailable as exc:
+            raise HTTPException(503, str(exc)) from exc
+
+    @app.post('/api/v1/reports/pdf')
+    async def export_report_pdf(payload: ReportPdfRequest):
+        safe_name = re.sub(r'[^A-Za-z0-9._-]+', '_', payload.filename).strip('._') or 'skin-lesion-report.pdf'
+        if not safe_name.lower().endswith('.pdf'):
+            safe_name += '.pdf'
+        try:
+            pdf_bytes = await run_in_threadpool(_render_html_to_pdf, payload.html)
+        except Exception as exc:
+            logger.warning('PDF generation unavailable: %s', exc)
+            raise HTTPException(503, str(exc)) from exc
+        return Response(
+            content=pdf_bytes,
+            media_type='application/pdf',
+            headers={'Content-Disposition': f'attachment; filename="{safe_name}"'},
+        )
 
     @app.post('/api/v1/prescriptions', status_code=201)
     async def create_prescription_record(prescription: PrescriptionCreate):
