@@ -12,13 +12,14 @@ function useSessionState() {
   const [sex, setSex] = useState('')
   const [site, setSite] = useState('unknown')
   const [result, setResult] = useState<ClassificationResult | null>(null)
+  const [reportImageSnapshot, setReportImageSnapshot] = useState<string | null>(null)
   const [tool, setTool] = useState<'rectangle' | 'freehand'>('rectangle')
   const [region, setRegion] = useState<Region | null>(null)
   const [history, setHistory] = useState<(Region | null)[]>([])
   const [zoom, setZoom] = useState(1)
   const [view, setView] = useState<'original' | 'input'>('original')
   useEffect(() => { setRegion(null); setHistory([]); setZoom(1); setView('original') }, [source.image])
-  return { ...source, patientName, setPatientName, patientId, setPatientId, age, setAge, sex, setSex, site, setSite, result, setResult, tool, setTool, region, setRegion, history, setHistory, zoom, setZoom, view, setView }
+  return { ...source, patientName, setPatientName, patientId, setPatientId, age, setAge, sex, setSex, site, setSite, result, setResult, reportImageSnapshot, setReportImageSnapshot, tool, setTool, region, setRegion, history, setHistory, zoom, setZoom, view, setView }
 }
 
 const AnalysisSessionContext = createContext<ReturnType<typeof useSessionState> | null>(null)
