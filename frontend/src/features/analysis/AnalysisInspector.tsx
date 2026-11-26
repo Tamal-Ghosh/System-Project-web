@@ -57,6 +57,18 @@ export function AnalysisInspector({ hasImage, result, image, age, sex, site }: {
         return
       }
       setExplanation(response); setFold(String(response.fold ?? fold))
+      if (response.status === 'ok' && response.image_map?.data) {
+        try {
+          localStorage.setItem(
+            `xai_evidence_${result.analysis_id}`,
+            JSON.stringify({
+              method: response.method === 'integrated_gradients' ? 'Integrated Gradients' : (response.method || 'Integrated Gradients'),
+              targetClass: response.target_class || target || result.leading_class,
+              maskData: response.image_map.data,
+            })
+          )
+        } catch { /* Ignore storage quota errors */ }
+      }
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return
       setMessage(error instanceof Error ? error.message : 'Explanation request failed.')
