@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
+import { FileText } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { ImageWorkspace } from './image/ImageWorkspace'
 import { useAnalysisSession } from './AnalysisSession'
 import { AnalysisInspector } from './AnalysisInspector'
 import { classify } from '../../services/classification'
 import { regionBounds } from './image/geometry'
-import { DoctorAssessmentPanel } from './DoctorAssessmentPanel'
 
 function createReportSnapshot(source: HTMLCanvasElement) {
   const maximumEdge = 720
@@ -19,18 +20,22 @@ function createReportSnapshot(source: HTMLCanvasElement) {
 }
 
 export function ImageAnalysisWorkspace() {
-  const { image, loading, error, load, clear, region, patientName, setPatientName, patientId, setPatientId, age, setAge, sex, setSex, site, setSite, result, setResult } = useAnalysisSession()
+  const { image, loading, error, load, clear, region, patientName, setPatientName, patientId, setPatientId, age, setAge, sex, setSex, site, setSite, result, setResult, setReportImageSnapshot } = useAnalysisSession()
   const [isClassifying, setIsClassifying] = useState(false)
   const [requestError, setRequestError] = useState('')
   const [analysisImage, setAnalysisImage] = useState<Blob | undefined>()
-  const [reportImageSnapshot, setReportImageSnapshot] = useState<string | null>(null)
   const controller = useRef<AbortController | null>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
+  const prevInputsRef = useRef({ image, region, patientName, patientId, age, sex, site })
   useEffect(() => {
+    const prev = prevInputsRef.current
+    const changed = prev.image !== image || prev.region !== region || prev.patientName !== patientName || prev.patientId !== patientId || prev.age !== age || prev.sex !== sex || prev.site !== site
+    prevInputsRef.current = { image, region, patientName, patientId, age, sex, site }
+    if (!changed) return
     controller.current?.abort()
     setResult(null); setAnalysisImage(undefined); setReportImageSnapshot(null); setRequestError(''); setIsClassifying(false)
     return () => controller.current?.abort()
-  }, [image, region, patientName, patientId, age, sex, site, setResult])
+  }, [image, region, patientName, patientId, age, sex, site, setResult, setReportImageSnapshot])
 
   async function handleStartClassification() {
     if (!image || isClassifying) return
@@ -72,6 +77,6 @@ export function ImageAnalysisWorkspace() {
       isClassifying={isClassifying} hasStartedClassification={!!result} />
     {isClassifying && <p role="status">Running model analysis…</p>}
     {requestError && <p className="image-error" role="alert">{requestError}</p>}
-    {result && <div ref={resultsRef} className="classification-reveal-container"><AnalysisInspector hasImage={!!image} result={result} image={analysisImage} age={age} sex={sex} site={site} /><DoctorAssessmentPanel key={result.analysis_id} result={result} patientName={patientName.trim()} patientId={patientId.trim()} imageSnapshot={reportImageSnapshot} /></div>}
+    {result && <div ref={resultsRef} className="classification-reveal-container"><AnalysisInspector hasImage={!!image} result={result} image={analysisImage} age={age} sex={sex} site={site} /><div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}><Link to="/reports/new" className="button button--primary"><FileText size={16} />Make Report</Link></div></div>}
   </div>
 }

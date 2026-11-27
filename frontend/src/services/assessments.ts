@@ -78,9 +78,39 @@ export async function saveAssessment(result: ClassificationResult, form: Assessm
 }
 
 export async function getAssessments(signal: AbortSignal): Promise<DoctorAssessment[]> {
-  const response = await fetch('/api/v1/assessments?limit=100', { signal })
-  if (!response.ok) throw new Error(await readError(response, 'Reviews could not be loaded.'))
+  const response = await fetch('/api/v1/assessments?limit=5', { signal })
+  if (!response.ok) throw new Error(await readError(response, 'Reports could not be loaded.'))
   const data = await response.json()
-  if (!Array.isArray(data)) throw new Error('Invalid reviews response.')
+  if (!Array.isArray(data)) throw new Error('Invalid reports response.')
   return data as DoctorAssessment[]
+}
+
+export async function updateAssessment(
+  id: string,
+  form: Pick<AssessmentFormData, 'decision' | 'confidence' | 'suspectedDiagnosis' | 'differentialDiagnoses' | 'clinicalNote' | 'nextAction'>,
+  signal: AbortSignal
+): Promise<DoctorAssessment> {
+  const response = await fetch(`/api/v1/assessments/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    signal,
+    body: JSON.stringify({
+      decision: form.decision,
+      confidence: form.confidence,
+      suspected_diagnosis: form.suspectedDiagnosis || null,
+      differential_diagnoses: form.differentialDiagnoses,
+      clinical_note: form.clinicalNote || null,
+      next_action: form.nextAction,
+    }),
+  })
+  if (!response.ok) throw new Error(await readError(response, 'Report could not be updated.'))
+  return response.json()
+}
+
+export async function deleteAssessment(id: string, signal?: AbortSignal): Promise<void> {
+  const response = await fetch(`/api/v1/assessments/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    signal,
+  })
+  if (!response.ok) throw new Error(await readError(response, 'Report could not be deleted.'))
 }

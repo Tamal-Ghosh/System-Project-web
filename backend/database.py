@@ -70,9 +70,19 @@ def create_doctor_assessment(payload: dict) -> dict:
         "uncertainty": Jsonb(payload["uncertainty"]),
         "ensemble": Jsonb(payload["ensemble"]),
     }
+    cleanup_query = """
+        DELETE FROM public.doctor_assessments
+        WHERE id NOT IN (
+            SELECT id FROM public.doctor_assessments
+            ORDER BY created_at DESC
+            LIMIT 5
+        )
+    """
     try:
         with psycopg.connect(_database_url(), connect_timeout=8, row_factory=dict_row) as connection:
-            return dict(connection.execute(query, parameters).fetchone())
+            row = dict(connection.execute(query, parameters).fetchone())
+            connection.execute(cleanup_query)
+            return row
     except DatabaseUnavailable:
         raise
     except Exception as exc:
@@ -80,7 +90,8 @@ def create_doctor_assessment(payload: dict) -> dict:
         raise DatabaseUnavailable("Assessment storage is unavailable") from exc
 
 
-def list_doctor_assessments(limit: int = 50) -> list[dict]:
+def list_doctor_assessments(limit: int = 5) -> list[dict]:
+    effective_limit = min(max(limit, 1), 5)
     query = """
         SELECT id, patient_id, patient_name, analysis_id, model_version, leading_class, model_scores,
                patient_metadata, image_snapshot, uncertainty, ensemble, input_policy, tta,
@@ -93,11 +104,52 @@ def list_doctor_assessments(limit: int = 50) -> list[dict]:
     """
     try:
         with psycopg.connect(_database_url(), connect_timeout=8, row_factory=dict_row) as connection:
-            return [dict(row) for row in connection.execute(query, (limit,)).fetchall()]
+            return [dict(row) for row in connection.execute(query, (effective_limit,)).fetchall()]
     except DatabaseUnavailable:
         raise
     except Exception as exc:
         logger.exception("Could not list doctor assessments (%s)", type(exc).__name__)
+        raise DatabaseUnavailable("Assessment storage is unavailable") from exc
+
+
+def update_doctor_assessment(assessment_id: str, payload: dict) -> dict | None:
+    query = """
+        UPDATE public.doctor_assessments
+        SET decision = %(decision)s,
+            confidence = %(confidence)s,
+            suspected_diagnosis = %(suspected_diagnosis)s,
+            differential_diagnoses = %(differential_diagnoses)s,
+            clinical_note = %(clinical_note)s,
+            next_action = %(next_action)s
+        WHERE id = %(id)s
+        RETURNING id, patient_id, patient_name, analysis_id, model_version, leading_class, model_scores,
+                  patient_metadata, image_snapshot, uncertainty, ensemble, input_policy, tta,
+                  limitations, decision, confidence,
+                  suspected_diagnosis, differential_diagnoses, clinical_note,
+                  next_action, reviewer_user_id, reviewer_name, created_at
+    """
+    parameters = {**payload, "id": assessment_id}
+    try:
+        with psycopg.connect(_database_url(), connect_timeout=8, row_factory=dict_row) as connection:
+            row = connection.execute(query, parameters).fetchone()
+            return dict(row) if row else None
+    except DatabaseUnavailable:
+        raise
+    except Exception as exc:
+        logger.exception("Could not update doctor assessment (%s)", type(exc).__name__)
+        raise DatabaseUnavailable("Assessment storage is unavailable") from exc
+
+
+def delete_doctor_assessment(assessment_id: str) -> bool:
+    query = "DELETE FROM public.doctor_assessments WHERE id = %s RETURNING id"
+    try:
+        with psycopg.connect(_database_url(), connect_timeout=8) as connection:
+            row = connection.execute(query, (assessment_id,)).fetchone()
+            return row is not None
+    except DatabaseUnavailable:
+        raise
+    except Exception as exc:
+        logger.exception("Could not delete doctor assessment (%s)", type(exc).__name__)
         raise DatabaseUnavailable("Assessment storage is unavailable") from exc
 
 
