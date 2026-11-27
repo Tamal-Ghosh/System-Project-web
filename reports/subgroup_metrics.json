@@ -1,0 +1,1563 @@
+{
+  "schema_version": "1.0",
+  "title": "DermaInsight E38 Subgroup Performance & Fairness Analysis",
+  "model": "DermFM Foundation + E38 LoRA Ensemble (5 Folds)",
+  "total_samples": 1200,
+  "classes": [
+    "AKIEC",
+    "BCC",
+    "BEN_OTH",
+    "BKL",
+    "DF",
+    "INF",
+    "MAL_OTH",
+    "MEL",
+    "NV",
+    "SCCKA",
+    "VASC"
+  ],
+  "critical_classes": [
+    "MEL",
+    "BCC",
+    "SCCKA"
+  ],
+  "overall": {
+    "n": 1200,
+    "low_sample": false,
+    "metrics": {
+      "macro_sensitivity": {
+        "value": 0.8367,
+        "ci_lower": 0.8057,
+        "ci_upper": 0.8665
+      },
+      "macro_auc": {
+        "value": 0.9089,
+        "ci_lower": 0.89,
+        "ci_upper": 0.9254
+      },
+      "balanced_accuracy": {
+        "value": 0.8367,
+        "ci_lower": 0.8057,
+        "ci_upper": 0.8665
+      },
+      "mel_sensitivity": {
+        "value": 0.8438,
+        "ci_lower": 0.7828,
+        "ci_upper": 0.8968
+      },
+      "bcc_sensitivity": {
+        "value": 0.8165,
+        "ci_lower": 0.7419,
+        "ci_upper": 0.8592
+      }
+    },
+    "class_sensitivities": {
+      "AKIEC": 0.9048,
+      "BCC": 0.8165,
+      "BEN_OTH": 0.8545,
+      "BKL": 0.8671,
+      "DF": 0.8889,
+      "INF": 0.6667,
+      "MAL_OTH": 0.8077,
+      "MEL": 0.8438,
+      "NV": 0.8322,
+      "SCCKA": 0.9273,
+      "VASC": 0.7949
+    }
+  },
+  "slices": {
+    "age_group": [
+      {
+        "subgroup": "40\u201365 (Middle-aged)",
+        "n": 645,
+        "n_pct": 53.8,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.8421,
+            "ci_lower": 0.8047,
+            "ci_upper": 0.878
+          },
+          "macro_auc": {
+            "value": 0.9075,
+            "ci_lower": 0.8864,
+            "ci_upper": 0.9336
+          },
+          "balanced_accuracy": {
+            "value": 0.8421,
+            "ci_lower": 0.8047,
+            "ci_upper": 0.878
+          },
+          "mel_sensitivity": {
+            "value": 0.8506,
+            "ci_lower": 0.7738,
+            "ci_upper": 0.9155
+          },
+          "bcc_sensitivity": {
+            "value": 0.8333,
+            "ci_lower": 0.7499,
+            "ci_upper": 0.9186
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.9394,
+          "BCC": 0.8333,
+          "BEN_OTH": 0.8182,
+          "BKL": 0.8857,
+          "DF": 0.9474,
+          "INF": 0.5882,
+          "MAL_OTH": 0.7857,
+          "MEL": 0.8506,
+          "NV": 0.8419,
+          "SCCKA": 0.963,
+          "VASC": 0.8095
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": 0.0054,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": -0.0014,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": 0.0054,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.0068,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.0168,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": ">65 (Elderly)",
+        "n": 304,
+        "n_pct": 25.3,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.8185,
+            "ci_lower": 0.7456,
+            "ci_upper": 0.8792
+          },
+          "macro_auc": {
+            "value": 0.8929,
+            "ci_lower": 0.8539,
+            "ci_upper": 0.9302
+          },
+          "balanced_accuracy": {
+            "value": 0.8185,
+            "ci_lower": 0.7456,
+            "ci_upper": 0.8792
+          },
+          "mel_sensitivity": {
+            "value": 0.7568,
+            "ci_lower": 0.6429,
+            "ci_upper": 0.8696
+          },
+          "bcc_sensitivity": {
+            "value": 0.7297,
+            "ci_lower": 0.5831,
+            "ci_upper": 0.8486
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.8824,
+          "BCC": 0.7297,
+          "BEN_OTH": 1.0,
+          "BKL": 0.8043,
+          "DF": 0.7,
+          "INF": 0.8,
+          "MAL_OTH": 0.8,
+          "MEL": 0.7568,
+          "NV": 0.7965,
+          "SCCKA": 0.9333,
+          "VASC": 0.8
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": -0.0182,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": -0.016,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": -0.0182,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": -0.087,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": -0.0868,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "<40 (Young)",
+        "n": 251,
+        "n_pct": 20.9,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.8827,
+            "ci_lower": 0.8139,
+            "ci_upper": 0.9319
+          },
+          "macro_auc": {
+            "value": 0.9508,
+            "ci_lower": 0.9272,
+            "ci_upper": 0.9701
+          },
+          "balanced_accuracy": {
+            "value": 0.8827,
+            "ci_lower": 0.8139,
+            "ci_upper": 0.9319
+          },
+          "mel_sensitivity": {
+            "value": 0.9167,
+            "ci_lower": 0.8045,
+            "ci_upper": 1.0
+          },
+          "bcc_sensitivity": {
+            "value": 0.871,
+            "ci_lower": 0.75,
+            "ci_upper": 1.0
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.8462,
+          "BCC": 0.871,
+          "BEN_OTH": 0.8462,
+          "BKL": 0.9259,
+          "DF": 1.0,
+          "INF": 1.0,
+          "MAL_OTH": 0.8571,
+          "MEL": 0.9167,
+          "NV": 0.8511,
+          "SCCKA": 0.8462,
+          "VASC": 0.75
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": 0.046,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": 0.0419,
+            "ci_overlap": false,
+            "statistically_significant": true,
+            "assessment": "Outperforming Overall"
+          },
+          "balanced_accuracy": {
+            "gap": 0.046,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.0729,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.0545,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      }
+    ],
+    "sex": [
+      {
+        "subgroup": "Male",
+        "n": 646,
+        "n_pct": 53.8,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.817,
+            "ci_lower": 0.7662,
+            "ci_upper": 0.8638
+          },
+          "macro_auc": {
+            "value": 0.8951,
+            "ci_lower": 0.8655,
+            "ci_upper": 0.9247
+          },
+          "balanced_accuracy": {
+            "value": 0.817,
+            "ci_lower": 0.7662,
+            "ci_upper": 0.8638
+          },
+          "mel_sensitivity": {
+            "value": 0.8736,
+            "ci_lower": 0.7969,
+            "ci_upper": 0.9419
+          },
+          "bcc_sensitivity": {
+            "value": 0.8276,
+            "ci_lower": 0.7249,
+            "ci_upper": 0.9012
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.9143,
+          "BCC": 0.8276,
+          "BEN_OTH": 0.7931,
+          "BKL": 0.8095,
+          "DF": 0.7857,
+          "INF": 0.8571,
+          "MAL_OTH": 0.6154,
+          "MEL": 0.8736,
+          "NV": 0.8205,
+          "SCCKA": 0.9286,
+          "VASC": 0.7619
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": -0.0197,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": -0.0138,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": -0.0197,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.0298,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.0111,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Female",
+        "n": 554,
+        "n_pct": 46.2,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.8487,
+            "ci_lower": 0.8075,
+            "ci_upper": 0.8907
+          },
+          "macro_auc": {
+            "value": 0.9226,
+            "ci_lower": 0.8979,
+            "ci_upper": 0.9423
+          },
+          "balanced_accuracy": {
+            "value": 0.8487,
+            "ci_lower": 0.8075,
+            "ci_upper": 0.8907
+          },
+          "mel_sensitivity": {
+            "value": 0.8082,
+            "ci_lower": 0.7163,
+            "ci_upper": 0.8892
+          },
+          "bcc_sensitivity": {
+            "value": 0.8028,
+            "ci_lower": 0.7031,
+            "ci_upper": 0.8832
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.8929,
+          "BCC": 0.8028,
+          "BEN_OTH": 0.9231,
+          "BKL": 0.9492,
+          "DF": 0.9545,
+          "INF": 0.4,
+          "MAL_OTH": 1.0,
+          "MEL": 0.8082,
+          "NV": 0.8454,
+          "SCCKA": 0.9259,
+          "VASC": 0.8333
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": 0.012,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": 0.0137,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": 0.012,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": -0.0356,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": -0.0137,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      }
+    ],
+    "anatomical_site": [
+      {
+        "subgroup": "Trunk",
+        "n": 392,
+        "n_pct": 32.7,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.842,
+            "ci_lower": 0.7936,
+            "ci_upper": 0.8975
+          },
+          "macro_auc": {
+            "value": 0.9159,
+            "ci_lower": 0.878,
+            "ci_upper": 0.9505
+          },
+          "balanced_accuracy": {
+            "value": 0.842,
+            "ci_lower": 0.7936,
+            "ci_upper": 0.8975
+          },
+          "mel_sensitivity": {
+            "value": 0.8571,
+            "ci_lower": 0.7317,
+            "ci_upper": 0.95
+          },
+          "bcc_sensitivity": {
+            "value": 0.8182,
+            "ci_lower": 0.7045,
+            "ci_upper": 0.9271
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.9048,
+          "BCC": 0.8182,
+          "BEN_OTH": 0.9375,
+          "BKL": 0.8444,
+          "DF": 0.8182,
+          "INF": 0.5,
+          "MAL_OTH": 1.0,
+          "MEL": 0.8571,
+          "NV": 0.8442,
+          "SCCKA": 0.88,
+          "VASC": 0.8571
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": 0.0053,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": 0.007,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": 0.0053,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.0133,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.0017,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Lower Extremity",
+        "n": 296,
+        "n_pct": 24.7,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.8313,
+            "ci_lower": 0.7643,
+            "ci_upper": 0.892
+          },
+          "macro_auc": {
+            "value": 0.889,
+            "ci_lower": 0.8422,
+            "ci_upper": 0.9344
+          },
+          "balanced_accuracy": {
+            "value": 0.8313,
+            "ci_lower": 0.7643,
+            "ci_upper": 0.892
+          },
+          "mel_sensitivity": {
+            "value": 0.875,
+            "ci_lower": 0.7798,
+            "ci_upper": 0.9545
+          },
+          "bcc_sensitivity": {
+            "value": 0.8571,
+            "ci_lower": 0.7332,
+            "ci_upper": 0.9535
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.9167,
+          "BCC": 0.8571,
+          "BEN_OTH": 0.8333,
+          "BKL": 0.8889,
+          "DF": 1.0,
+          "INF": 0.5,
+          "MAL_OTH": 0.6667,
+          "MEL": 0.875,
+          "NV": 0.8571,
+          "SCCKA": 1.0,
+          "VASC": 0.75
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": -0.0054,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": -0.0199,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": -0.0054,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.0312,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.0406,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Head / Neck / Face",
+        "n": 285,
+        "n_pct": 23.8,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.848,
+            "ci_lower": 0.7859,
+            "ci_upper": 0.9098
+          },
+          "macro_auc": {
+            "value": 0.9113,
+            "ci_lower": 0.8805,
+            "ci_upper": 0.9414
+          },
+          "balanced_accuracy": {
+            "value": 0.848,
+            "ci_lower": 0.7859,
+            "ci_upper": 0.9098
+          },
+          "mel_sensitivity": {
+            "value": 0.7778,
+            "ci_lower": 0.6531,
+            "ci_upper": 0.9063
+          },
+          "bcc_sensitivity": {
+            "value": 0.75,
+            "ci_lower": 0.6248,
+            "ci_upper": 0.9063
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.9231,
+          "BCC": 0.75,
+          "BEN_OTH": 0.8333,
+          "BKL": 0.9,
+          "DF": 1.0,
+          "INF": 0.8333,
+          "MAL_OTH": 1.0,
+          "MEL": 0.7778,
+          "NV": 0.8108,
+          "SCCKA": 1.0,
+          "VASC": 0.5
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": 0.0113,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": 0.0024,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": 0.0113,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": -0.066,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": -0.0665,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Upper Extremity",
+        "n": 141,
+        "n_pct": 11.8,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.8589,
+            "ci_lower": 0.7852,
+            "ci_upper": 0.933
+          },
+          "macro_auc": {
+            "value": 0.9239,
+            "ci_lower": 0.8789,
+            "ci_upper": 0.9662
+          },
+          "balanced_accuracy": {
+            "value": 0.8589,
+            "ci_lower": 0.7852,
+            "ci_upper": 0.933
+          },
+          "mel_sensitivity": {
+            "value": 0.8667,
+            "ci_lower": 0.6646,
+            "ci_upper": 1.0
+          },
+          "bcc_sensitivity": {
+            "value": 0.9048,
+            "ci_lower": 0.7687,
+            "ci_upper": 1.0
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.9231,
+          "BCC": 0.9048,
+          "BEN_OTH": 0.8,
+          "BKL": 0.75,
+          "DF": 0.8889,
+          "INF": 0.7143,
+          "MAL_OTH": 1.0,
+          "MEL": 0.8667,
+          "NV": 0.8,
+          "SCCKA": 1.0,
+          "VASC": 0.8
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": 0.0222,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": 0.015,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": 0.0222,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.0229,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.0883,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Hand",
+        "n": 54,
+        "n_pct": 4.5,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.7874,
+            "ci_lower": 0.6446,
+            "ci_upper": 0.9465
+          },
+          "macro_auc": {
+            "value": 0.883,
+            "ci_lower": 0.8189,
+            "ci_upper": 0.9614
+          },
+          "balanced_accuracy": {
+            "value": 0.7874,
+            "ci_lower": 0.6446,
+            "ci_upper": 0.9465
+          },
+          "mel_sensitivity": {
+            "value": 0.8889,
+            "ci_lower": 0.69,
+            "ci_upper": 1.0
+          },
+          "bcc_sensitivity": {
+            "value": 0.6667,
+            "ci_lower": 0.3333,
+            "ci_upper": 1.0
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 1.0,
+          "BCC": 0.6667,
+          "BEN_OTH": 1.0,
+          "BKL": 1.0,
+          "DF": 0.0,
+          "INF": 1.0,
+          "MAL_OTH": 0.5,
+          "MEL": 0.8889,
+          "NV": 0.8182,
+          "SCCKA": null,
+          "VASC": 1.0
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": -0.0493,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": -0.0259,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": -0.0493,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.0451,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": -0.1498,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Foot",
+        "n": 22,
+        "n_pct": 1.8,
+        "low_sample": true,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.775,
+            "ci_lower": 0.6444,
+            "ci_upper": 0.9723
+          },
+          "macro_auc": {
+            "value": 0.9536,
+            "ci_lower": 0.9046,
+            "ci_upper": 1.0
+          },
+          "balanced_accuracy": {
+            "value": 0.775,
+            "ci_lower": 0.6444,
+            "ci_upper": 0.9723
+          },
+          "mel_sensitivity": {
+            "value": 1.0,
+            "ci_lower": 1.0,
+            "ci_upper": 1.0
+          },
+          "bcc_sensitivity": {
+            "value": 0.75,
+            "ci_lower": 0.0,
+            "ci_upper": 1.0
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.5,
+          "BCC": 0.75,
+          "BEN_OTH": 0.0,
+          "BKL": 1.0,
+          "DF": 1.0,
+          "INF": null,
+          "MAL_OTH": 0.5,
+          "MEL": 1.0,
+          "NV": 1.0,
+          "SCCKA": 1.0,
+          "VASC": 1.0
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": -0.0617,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "macro_auc": {
+            "gap": 0.0447,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "balanced_accuracy": {
+            "gap": -0.0617,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.1562,
+            "ci_overlap": false,
+            "statistically_significant": true,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "bcc_sensitivity": {
+            "gap": -0.0665,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Inconclusive (Low N)"
+          }
+        }
+      },
+      {
+        "subgroup": "Genital",
+        "n": 10,
+        "n_pct": 0.8,
+        "low_sample": true,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.6,
+            "ci_lower": 0.3333,
+            "ci_upper": 0.9375
+          },
+          "macro_auc": {
+            "value": 0.7208,
+            "ci_lower": 0.4339,
+            "ci_upper": 0.9505
+          },
+          "balanced_accuracy": {
+            "value": 0.6,
+            "ci_lower": 0.3333,
+            "ci_upper": 0.9375
+          },
+          "mel_sensitivity": {
+            "value": 0.0,
+            "ci_lower": 0.0,
+            "ci_upper": 0.0
+          },
+          "bcc_sensitivity": {
+            "value": 1.0,
+            "ci_lower": 1.0,
+            "ci_upper": 1.0
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": null,
+          "BCC": 1.0,
+          "BEN_OTH": null,
+          "BKL": 1.0,
+          "DF": null,
+          "INF": null,
+          "MAL_OTH": null,
+          "MEL": 0.0,
+          "NV": 0.5,
+          "SCCKA": 0.5,
+          "VASC": null
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": -0.2367,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "macro_auc": {
+            "gap": -0.1881,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "balanced_accuracy": {
+            "gap": -0.2367,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "mel_sensitivity": {
+            "gap": -0.8438,
+            "ci_overlap": false,
+            "statistically_significant": true,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.1835,
+            "ci_overlap": false,
+            "statistically_significant": true,
+            "assessment": "Inconclusive (Low N)"
+          }
+        }
+      }
+    ],
+    "anatomical_region": [
+      {
+        "subgroup": "Extremities",
+        "n": 513,
+        "n_pct": 42.8,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.8322,
+            "ci_lower": 0.7895,
+            "ci_upper": 0.8804
+          },
+          "macro_auc": {
+            "value": 0.9068,
+            "ci_lower": 0.8785,
+            "ci_upper": 0.9342
+          },
+          "balanced_accuracy": {
+            "value": 0.8322,
+            "ci_lower": 0.7895,
+            "ci_upper": 0.8804
+          },
+          "mel_sensitivity": {
+            "value": 0.8784,
+            "ci_lower": 0.8024,
+            "ci_upper": 0.9394
+          },
+          "bcc_sensitivity": {
+            "value": 0.8421,
+            "ci_lower": 0.7606,
+            "ci_upper": 0.9176
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.8966,
+          "BCC": 0.8421,
+          "BEN_OTH": 0.8095,
+          "BKL": 0.8596,
+          "DF": 0.8824,
+          "INF": 0.6667,
+          "MAL_OTH": 0.6667,
+          "MEL": 0.8784,
+          "NV": 0.843,
+          "SCCKA": 1.0,
+          "VASC": 0.8095
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": -0.0045,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": -0.0021,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": -0.0045,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.0346,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.0256,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Trunk",
+        "n": 392,
+        "n_pct": 32.7,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.842,
+            "ci_lower": 0.7936,
+            "ci_upper": 0.8975
+          },
+          "macro_auc": {
+            "value": 0.9159,
+            "ci_lower": 0.878,
+            "ci_upper": 0.9505
+          },
+          "balanced_accuracy": {
+            "value": 0.842,
+            "ci_lower": 0.7936,
+            "ci_upper": 0.8975
+          },
+          "mel_sensitivity": {
+            "value": 0.8571,
+            "ci_lower": 0.7317,
+            "ci_upper": 0.95
+          },
+          "bcc_sensitivity": {
+            "value": 0.8182,
+            "ci_lower": 0.7045,
+            "ci_upper": 0.9271
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.9048,
+          "BCC": 0.8182,
+          "BEN_OTH": 0.9375,
+          "BKL": 0.8444,
+          "DF": 0.8182,
+          "INF": 0.5,
+          "MAL_OTH": 1.0,
+          "MEL": 0.8571,
+          "NV": 0.8442,
+          "SCCKA": 0.88,
+          "VASC": 0.8571
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": 0.0053,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": 0.007,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": 0.0053,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.0133,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.0017,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Head & Neck",
+        "n": 285,
+        "n_pct": 23.8,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.848,
+            "ci_lower": 0.7859,
+            "ci_upper": 0.9098
+          },
+          "macro_auc": {
+            "value": 0.9113,
+            "ci_lower": 0.8805,
+            "ci_upper": 0.9414
+          },
+          "balanced_accuracy": {
+            "value": 0.848,
+            "ci_lower": 0.7859,
+            "ci_upper": 0.9098
+          },
+          "mel_sensitivity": {
+            "value": 0.7778,
+            "ci_lower": 0.6531,
+            "ci_upper": 0.9063
+          },
+          "bcc_sensitivity": {
+            "value": 0.75,
+            "ci_lower": 0.6248,
+            "ci_upper": 0.9063
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.9231,
+          "BCC": 0.75,
+          "BEN_OTH": 0.8333,
+          "BKL": 0.9,
+          "DF": 1.0,
+          "INF": 0.8333,
+          "MAL_OTH": 1.0,
+          "MEL": 0.7778,
+          "NV": 0.8108,
+          "SCCKA": 1.0,
+          "VASC": 0.5
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": 0.0113,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": 0.0024,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": 0.0113,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": -0.066,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": -0.0665,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Genital",
+        "n": 10,
+        "n_pct": 0.8,
+        "low_sample": true,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.6,
+            "ci_lower": 0.3333,
+            "ci_upper": 0.9375
+          },
+          "macro_auc": {
+            "value": 0.7208,
+            "ci_lower": 0.4339,
+            "ci_upper": 0.9505
+          },
+          "balanced_accuracy": {
+            "value": 0.6,
+            "ci_lower": 0.3333,
+            "ci_upper": 0.9375
+          },
+          "mel_sensitivity": {
+            "value": 0.0,
+            "ci_lower": 0.0,
+            "ci_upper": 0.0
+          },
+          "bcc_sensitivity": {
+            "value": 1.0,
+            "ci_lower": 1.0,
+            "ci_upper": 1.0
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": null,
+          "BCC": 1.0,
+          "BEN_OTH": null,
+          "BKL": 1.0,
+          "DF": null,
+          "INF": null,
+          "MAL_OTH": null,
+          "MEL": 0.0,
+          "NV": 0.5,
+          "SCCKA": 0.5,
+          "VASC": null
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": -0.2367,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "macro_auc": {
+            "gap": -0.1881,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "balanced_accuracy": {
+            "gap": -0.2367,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "mel_sensitivity": {
+            "gap": -0.8438,
+            "ci_overlap": false,
+            "statistically_significant": true,
+            "assessment": "Inconclusive (Low N)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.1835,
+            "ci_overlap": false,
+            "statistically_significant": true,
+            "assessment": "Inconclusive (Low N)"
+          }
+        }
+      }
+    ],
+    "fitzpatrick": [
+      {
+        "subgroup": "Type I\u2013II (Light)",
+        "n": 677,
+        "n_pct": 56.4,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.851,
+            "ci_lower": 0.8107,
+            "ci_upper": 0.8938
+          },
+          "macro_auc": {
+            "value": 0.9183,
+            "ci_lower": 0.8972,
+            "ci_upper": 0.9423
+          },
+          "balanced_accuracy": {
+            "value": 0.851,
+            "ci_lower": 0.8107,
+            "ci_upper": 0.8938
+          },
+          "mel_sensitivity": {
+            "value": 0.8353,
+            "ci_lower": 0.7578,
+            "ci_upper": 0.9259
+          },
+          "bcc_sensitivity": {
+            "value": 0.8046,
+            "ci_lower": 0.7141,
+            "ci_upper": 0.8792
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.8889,
+          "BCC": 0.8046,
+          "BEN_OTH": 0.7812,
+          "BKL": 0.8902,
+          "DF": 0.913,
+          "INF": 0.75,
+          "MAL_OTH": 0.8889,
+          "MEL": 0.8353,
+          "NV": 0.8115,
+          "SCCKA": 0.9714,
+          "VASC": 0.8261
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": 0.0143,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": 0.0094,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": 0.0143,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": -0.0085,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": -0.0119,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Type III\u2013IV (Medium)",
+        "n": 421,
+        "n_pct": 35.1,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.8148,
+            "ci_lower": 0.7477,
+            "ci_upper": 0.8828
+          },
+          "macro_auc": {
+            "value": 0.8953,
+            "ci_lower": 0.8483,
+            "ci_upper": 0.9362
+          },
+          "balanced_accuracy": {
+            "value": 0.8148,
+            "ci_lower": 0.7477,
+            "ci_upper": 0.8828
+          },
+          "mel_sensitivity": {
+            "value": 0.8548,
+            "ci_lower": 0.766,
+            "ci_upper": 0.9385
+          },
+          "bcc_sensitivity": {
+            "value": 0.8333,
+            "ci_lower": 0.7292,
+            "ci_upper": 0.9287
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.9583,
+          "BCC": 0.8333,
+          "BEN_OTH": 0.9444,
+          "BKL": 0.8667,
+          "DF": 0.7778,
+          "INF": 0.6667,
+          "MAL_OTH": 0.5,
+          "MEL": 0.8548,
+          "NV": 0.878,
+          "SCCKA": 0.8824,
+          "VASC": 0.8
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": -0.0219,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": -0.0136,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": -0.0219,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.011,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.0168,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      },
+      {
+        "subgroup": "Type V\u2013VI (Dark)",
+        "n": 102,
+        "n_pct": 8.5,
+        "low_sample": false,
+        "metrics": {
+          "macro_sensitivity": {
+            "value": 0.6904,
+            "ci_lower": 0.5823,
+            "ci_upper": 0.8474
+          },
+          "macro_auc": {
+            "value": 0.8154,
+            "ci_lower": 0.7427,
+            "ci_upper": 0.9055
+          },
+          "balanced_accuracy": {
+            "value": 0.6904,
+            "ci_lower": 0.5823,
+            "ci_upper": 0.8474
+          },
+          "mel_sensitivity": {
+            "value": 0.8462,
+            "ci_lower": 0.5833,
+            "ci_upper": 1.0
+          },
+          "bcc_sensitivity": {
+            "value": 0.8235,
+            "ci_lower": 0.6145,
+            "ci_upper": 1.0
+          }
+        },
+        "class_sensitivities": {
+          "AKIEC": 0.6667,
+          "BCC": 0.8235,
+          "BEN_OTH": 1.0,
+          "BKL": 0.75,
+          "DF": 1.0,
+          "INF": 0.3333,
+          "MAL_OTH": 0.75,
+          "MEL": 0.8462,
+          "NV": 0.7576,
+          "SCCKA": 0.6667,
+          "VASC": 0.0
+        },
+        "comparisons": {
+          "macro_sensitivity": {
+            "gap": -0.1463,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "macro_auc": {
+            "gap": -0.0935,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "balanced_accuracy": {
+            "gap": -0.1463,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "mel_sensitivity": {
+            "gap": 0.0024,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          },
+          "bcc_sensitivity": {
+            "gap": 0.007,
+            "ci_overlap": true,
+            "statistically_significant": false,
+            "assessment": "Equitable (Within Variation)"
+          }
+        }
+      }
+    ]
+  },
+  "notable_disparities": []
+}
