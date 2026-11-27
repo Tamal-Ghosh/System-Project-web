@@ -15,3 +15,5 @@ COPY backend/scripts/evaluate_conversation.py /app/evaluate_conversation.py
 
 COPY --chown=10001:10001 backend/migrations ./migrations
 COPY --chown=10001:10001 backend/scripts/migrate_assistant_online.py ./scripts/migrate_assistant_online.py
+
+COPY --chown=10001:10001 backend/segmentation ./segmentation

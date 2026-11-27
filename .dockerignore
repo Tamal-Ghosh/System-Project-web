@@ -28,3 +28,7 @@ docker/bundles
 **/.tmp
 **/.npmrc
 **/*.tsbuildinfo
+
+# Private segmentation data and trained model assets
+docker/segmentation-assets/
+backend/segmentation.local.json

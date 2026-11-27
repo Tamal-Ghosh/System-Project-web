@@ -1,0 +1,2 @@
+# Export only; Docker inference uses the existing PyTorch runtime.
+transformers==5.16.0

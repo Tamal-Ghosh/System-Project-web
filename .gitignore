@@ -43,3 +43,7 @@ backend/.model-assets/
 # Docker publisher assets and transferable image bundles
 docker/model-assets/
 docker/bundles/
+
+# Private segmentation data and trained model assets
+docker/segmentation-assets/
+backend/segmentation.local.json

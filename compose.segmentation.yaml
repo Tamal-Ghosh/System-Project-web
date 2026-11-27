@@ -1,0 +1,41 @@
+# Optional overlay: classifier/chatbot environment stays unchanged; automatic Grounding DINO + SAM 2.1 runs separately.
+services:
+  backend:
+    image: dermascope-backend:segmentation-api-dev
+    build:
+      context: .
+      dockerfile: docker/segmentation-backend.Dockerfile
+    environment:
+      SEGMENTATION_SERVICE_URL: http://segmentation:8000
+  segmentation:
+    image: dermascope-segmentation:segformer-b2-dev
+    build:
+      context: .
+      dockerfile: docker/segmentation.Dockerfile
+    pull_policy: never
+    init: true
+    environment:
+      SEGMENTATION_MODEL_DIR: /opt/models/segmentation
+      SEGMENTATION_DEVICE: cpu
+      SEGMENTATION_PROVIDER: segformer_b2
+      TORCH_THREADS: "4"
+      OMP_NUM_THREADS: "4"
+    expose: ["8000"]
+    command: ["python", "-m", "uvicorn", "segmentation.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - type: bind
+        source: ${SEGMENTATION_ASSETS_PATH:-D:/DermascopeModelAssets/segformer-gate2-real}
+        target: /opt/models/segmentation
+        read_only: true
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/segmentation/status')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  frontend:
+    image: dermascope-frontend:segmentation-dev
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
