@@ -10,6 +10,7 @@ import { AnalysisPage } from '../features/analysis/AnalysisPage'
 import { MakeReportPage } from '../features/reports/MakeReportPage'
 import { ReportsPage } from '../features/reports/ReportsPage'
 import { HelpPage } from '../features/help/HelpPage'
+import { EvidencePage } from '../features/evidence/EvidencePage'
 
 function NotFound() { return <div className="fatal-error"><h1>Page not found</h1><p>This page is not part of the shared base.</p><ButtonLink to="/dashboard">Return to dashboard</ButtonLink></div> }
 function RouteError() { useRouteError(); return <div className="fatal-error"><h1>This page could not load</h1><p>Return to the dashboard and try again.</p><ButtonLink to="/dashboard">Return to dashboard</ButtonLink></div> }
@@ -27,7 +28,7 @@ export const router = createHashRouter([
     { path: 'reports/new', element: <MakeReportPage /> },
     { path: 'reports/edit/:reportId', element: <MakeReportPage /> },
     { path: 'help', element: <HelpPage /> },
-    { path: 'evidence', element: <Navigate to="/analysis?module=validation" replace /> },
+    { path: 'evidence', element: <EvidencePage />, errorElement: <RouteError /> },
     { path: 'settings', element: <SettingsPage /> },
     { path: 'profile', element: <ProfilePage /> },
     { path: 'foundation', element: <Navigate to="/dashboard" replace /> },
