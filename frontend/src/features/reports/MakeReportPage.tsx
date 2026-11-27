@@ -6,6 +6,7 @@ import { useAnalysisSession } from '../analysis/AnalysisSession'
 import { getAssessments, saveAssessment, updateAssessment } from '../../services/assessments'
 import type { AssessmentDecision, DoctorAssessment, NextAction } from '../../services/assessments'
 import { parseReportDetails, serializeReportDetails } from '../../services/reports'
+import { loadClinicSettings } from '../../services/settings'
 
 const decisions: { value: AssessmentDecision; label: string }[] = [
   { value: 'agree', label: 'Agree' },
@@ -41,10 +42,11 @@ export function MakeReportPage() {
   const [loadingEdit, setLoadingEdit] = useState(isEditMode && !routeReport)
 
   const initialDetails = parseReportDetails(routeReport?.clinical_note)
+  const clinicDefaults = loadClinicSettings()
 
-  const [clinicName, setClinicName] = useState(initialDetails?.clinicName || 'DermaScope Clinical Unit')
-  const [clinicAddress, setClinicAddress] = useState(initialDetails?.clinicAddress || '')
-  const [clinicContact, setClinicContact] = useState(initialDetails?.clinicContact || '')
+  const [clinicName, setClinicName] = useState(initialDetails?.clinicName || clinicDefaults.clinicName)
+  const [clinicAddress, setClinicAddress] = useState(initialDetails?.clinicAddress || clinicDefaults.clinicAddress)
+  const [clinicContact, setClinicContact] = useState(initialDetails?.clinicContact || clinicDefaults.clinicContact)
 
   const [duration, setDuration] = useState(initialDetails?.duration || '')
   const [reportedChanges, setReportedChanges] = useState(initialDetails?.reportedChanges || '')
@@ -66,11 +68,11 @@ export function MakeReportPage() {
   const [triage, setTriage] = useState<'Routine' | 'Priority' | 'Urgent'>(initialDetails?.triage || 'Routine')
   const [nextAction, setNextAction] = useState<NextAction>(routeReport?.next_action || 'routine_follow_up')
   const [followUpPlan, setFollowUpPlan] = useState(initialDetails?.followUpPlan || '')
-  const [safetyNetAdvice, setSafetyNetAdvice] = useState(initialDetails?.safetyNetAdvice || DEFAULT_SAFETY_ADVICE)
+  const [safetyNetAdvice, setSafetyNetAdvice] = useState(initialDetails?.safetyNetAdvice || clinicDefaults.defaultSafetyAdvice)
 
   const [aiEvidenceReview, setAiEvidenceReview] = useState(initialDetails?.aiEvidenceReview || '')
-  const [reviewedBy, setReviewedBy] = useState(initialDetails?.reviewedBy || '')
-  const [reviewStatus, setReviewStatus] = useState<'Pending' | 'Signed'>(initialDetails?.reviewStatus || 'Pending')
+  const [reviewedBy, setReviewedBy] = useState(initialDetails?.reviewedBy || clinicDefaults.defaultClinician)
+  const [reviewStatus, setReviewStatus] = useState<'Pending' | 'Signed'>(initialDetails?.reviewStatus || clinicDefaults.defaultReviewStatus)
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')

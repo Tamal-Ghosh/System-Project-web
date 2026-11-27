@@ -701,3 +701,267 @@ button:disabled { opacity: 1; color: #718398; background: #edf2f6; border-color:
 .medicine-secondary-grid { display:grid; grid-template-columns:minmax(170px,.65fr) minmax(280px,2fr); gap:13px; margin-top:13px; }
 @media(max-width:1050px) { .medicine-primary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.dose-schedule { grid-template-columns:repeat(4,minmax(0,1fr)); }.dose-schedule > div:first-child,.dose-pattern { grid-column:span 2; } }
 @media(max-width:700px) { .medicine-primary-grid,.medicine-secondary-grid { grid-template-columns:1fr; }.dose-schedule { grid-template-columns:repeat(3,minmax(0,1fr)); }.dose-schedule > div:first-child,.dose-pattern { grid-column:1 / -1; } }
+
+
+/* Dark theme support toggled from Settings -> Appearance & Language */
+:root[data-theme="dark"] {
+  --color-canvas: #0f1722;
+  --color-surface: #16202e;
+  --color-ink: #e4edf5;
+  --color-sage: #2fb6aa;
+  --color-line: #283649;
+  --muted: #9eb1c4;
+  --text-subtle: #8fa3b8;
+  --surface-muted: #1c2838;
+  --surface-hover: #213144;
+  --sage-light: #163638;
+  --accent-active: #153c3f;
+  --accent-hover: #24968c;
+  --border-strong: #3b4f67;
+  --focus-ring: #2fb6aa;
+}
+
+:root[data-theme="dark"] body,
+:root[data-theme="dark"] .app-main {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+:root[data-theme="dark"] .sidebar,
+:root[data-theme="dark"] .topbar,
+:root[data-theme="dark"] .clinical-image-panel,
+:root[data-theme="dark"] .analysis-inspector,
+:root[data-theme="dark"] .doctor-assessment,
+:root[data-theme="dark"] .report-card {
+  background: var(--color-surface);
+  border-color: var(--color-line);
+  color: var(--color-ink);
+}
+
+:root[data-theme="dark"] .button--secondary {
+  background: var(--surface-muted);
+  border-color: var(--color-line);
+  color: var(--color-ink);
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea {
+  background: var(--surface-muted);
+  border-color: var(--color-line);
+  color: var(--color-ink);
+}
+
+
+/* Polished Settings, Profile & Help layout */
+.workspace-narrow {
+  max-width: 1020px;
+  display: grid;
+  gap: 20px;
+}
+
+.settings-card {
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  background: var(--color-surface);
+  padding: 22px 24px;
+  box-shadow: 0 1px 3px rgba(16, 36, 59, 0.04);
+}
+
+.settings-card--accent {
+  background: var(--sage-light);
+  border-color: rgba(0, 133, 121, 0.25);
+}
+
+.settings-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.settings-card__title-group {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.settings-card__title-group h2 {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.settings-card__title-group p {
+  margin: 3px 0 0;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.settings-card__divider {
+  height: 1px;
+  background: var(--color-line);
+  margin: 16px 0;
+}
+
+.settings-grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 720px) {
+  .settings-grid-two {
+    grid-template-columns: 1fr;
+  }
+}
+
+.segmented-control {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 9px;
+  background: var(--surface-muted);
+  border: 1px solid var(--color-line);
+  gap: 4px;
+}
+
+.segmented-control button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13.5px;
+  font-weight: 550;
+  background: transparent;
+  color: var(--muted);
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.segmented-control button.is-selected {
+  background: var(--color-sage);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.toggle-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 15px;
+  border-radius: 9px;
+  border: 1px solid var(--color-line);
+  background: var(--surface-muted);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.toggle-tile.is-checked {
+  border-color: var(--color-sage);
+  background: var(--sage-light);
+}
+
+.toggle-tile__copy strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.toggle-tile__copy span {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.switch-pill {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: #b9c5d1;
+  flex: none;
+  transition: background 0.15s ease;
+}
+
+.switch-pill::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.toggle-tile.is-checked .switch-pill {
+  background: var(--color-sage);
+}
+
+.toggle-tile.is-checked .switch-pill::after {
+  transform: translateX(18px);
+}
+
+.help-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+  gap: 12px;
+}
+
+.help-step {
+  padding: 14px;
+  border-radius: 9px;
+  border: 1px solid var(--color-line);
+  background: var(--surface-muted);
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.help-step__num {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: var(--color-sage);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.help-faq {
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--surface-muted);
+}
+
+.help-faq summary {
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.help-faq p {
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+:root[data-theme="dark"] .settings-card {
+  background: var(--color-surface);
+  border-color: var(--color-line);
+}
+
+:root[data-theme="dark"] .settings-card--accent {
+  background: var(--sage-light);
+}

@@ -1,5 +1,6 @@
 import type { AssessmentDecision, DoctorAssessment, NextAction } from './assessments'
 import type { Prescription } from './prescriptions'
+import { loadClinicSettings } from './settings'
 
 const actionLabels: Record<NextAction, string> = {
   routine_follow_up: 'Routine follow-up',
@@ -127,13 +128,14 @@ export function doctorReportHtml(assessment: DoctorAssessment) {
 
   const leadingScore = assessment.model_scores.find(row => row.label === assessment.leading_class)?.score ?? Math.max(...assessment.model_scores.map(row => row.score))
 
+  const prefs = loadClinicSettings()
   const storedXai = readStoredEvidence(`xai_evidence_${assessment.analysis_id}`)
-  const hasXai = Boolean(storedXai?.maskData || details?.xaiMethod)
+  const hasXai = prefs.includeXaiInReport && Boolean(storedXai?.maskData || details?.xaiMethod)
   const xaiMethod = details?.xaiMethod || storedXai?.method || 'Integrated Gradients'
   const xaiTarget = details?.xaiTargetClass || storedXai?.targetClass || assessment.leading_class
 
   const storedSeg = readStoredEvidence(`seg_evidence_${assessment.analysis_id}`)
-  const hasSeg = Boolean(storedSeg?.maskData || details?.segStatus)
+  const hasSeg = prefs.includeSegInReport && Boolean(storedSeg?.maskData || details?.segStatus)
   const segStatus = details?.segStatus || storedSeg?.status || 'Valid'
   const segCorrected = details?.segCorrected || storedSeg?.corrected || 'No'
 

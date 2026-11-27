@@ -4,6 +4,7 @@ import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { NewCasePage } from '../features/cases/NewCasePage'
 import { WorkspacePage } from '../features/workspace/WorkspacePage'
 import { SettingsPage } from '../features/settings/SettingsPage'
+import { ProfilePage } from '../features/settings/ProfilePage'
 import { ButtonLink } from '../components/ui/Button'
 import { AnalysisPage } from '../features/analysis/AnalysisPage'
 import { MakeReportPage } from '../features/reports/MakeReportPage'
@@ -28,6 +29,7 @@ export const router = createHashRouter([
     { path: 'help', element: <HelpPage /> },
     { path: 'evidence', element: <Navigate to="/analysis?module=validation" replace /> },
     { path: 'settings', element: <SettingsPage /> },
+    { path: 'profile', element: <ProfilePage /> },
     { path: 'foundation', element: <Navigate to="/dashboard" replace /> },
     { path: '*', element: <NotFound /> },
   ] },
