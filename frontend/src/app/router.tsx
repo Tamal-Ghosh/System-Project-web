@@ -3,10 +3,11 @@ import { AppShell } from './AppShell'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { NewCasePage } from '../features/cases/NewCasePage'
 import { WorkspacePage } from '../features/workspace/WorkspacePage'
-import { ReviewsPage } from '../features/reviews/ReviewsPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
+import { ProfilePage } from '../features/settings/ProfilePage'
 import { ButtonLink } from '../components/ui/Button'
 import { AnalysisPage } from '../features/analysis/AnalysisPage'
+import { MakeReportPage } from '../features/reports/MakeReportPage'
 import { ReportsPage } from '../features/reports/ReportsPage'
 import { HelpPage } from '../features/help/HelpPage'
 
@@ -20,13 +21,15 @@ export const router = createHashRouter([
     { path: 'cases', element: <Navigate to="/dashboard" replace /> },
     { path: 'cases/new', element: <NewCasePage />, errorElement: <RouteError /> },
     { path: 'cases/:caseId', element: <WorkspacePage />, errorElement: <RouteError /> },
-    { path: 'reviews', element: <ReviewsPage /> },
     { path: 'analysis', element: <AnalysisPage /> },
     { path: 'assistant', element: <Navigate to="/analysis" replace /> },
     { path: 'reports', element: <ReportsPage /> },
+    { path: 'reports/new', element: <MakeReportPage /> },
+    { path: 'reports/edit/:reportId', element: <MakeReportPage /> },
     { path: 'help', element: <HelpPage /> },
     { path: 'evidence', element: <Navigate to="/analysis?module=validation" replace /> },
     { path: 'settings', element: <SettingsPage /> },
+    { path: 'profile', element: <ProfilePage /> },
     { path: 'foundation', element: <Navigate to="/dashboard" replace /> },
     { path: '*', element: <NotFound /> },
   ] },
