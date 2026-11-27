@@ -1,0 +1,8 @@
+{
+  "task": "dermoscopic_lesion_boundary",
+  "configuration": "2d",
+  "model_version": "nnunet-isic-v1",
+  "folds": [0],
+  "checkpoint": "checkpoint_final.pth",
+  "checkpoint_sha256": {"0": "REPLACE_WITH_ACTUAL_CHECKPOINT_SHA256"}
+}

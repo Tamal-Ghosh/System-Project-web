@@ -20,6 +20,45 @@ class DatabaseUnavailable(RuntimeError):
     pass
 
 
+class AnalysisMismatch(ValueError):
+    pass
+
+
+def save_analysis_snapshot(result: dict) -> None:
+    """Store only server-produced inference results; never overwrite an ID."""
+    try:
+        with psycopg.connect(_database_url(), connect_timeout=8) as connection:
+            connection.execute(
+                "INSERT INTO public.analyses (id, model_version, input_hash, response_snapshot) VALUES (%s, %s, %s, %s)",
+                (result['analysis_id'], result['model_version'], result['input_hash'], Jsonb(result)),
+            )
+    except DatabaseUnavailable:
+        raise
+    except Exception as exc:
+        logger.warning('Analysis storage failed (%s)', type(exc).__name__)
+        raise DatabaseUnavailable('Analysis storage is unavailable') from exc
+
+
+def save_explanation_snapshot(analysis_id: str, explanation_id: str, result: dict) -> None:
+    """Attach explanation provenance only when its model and input match."""
+    evidence = {key: value for key, value in result.items() if key != 'image_map'}
+    try:
+        with psycopg.connect(_database_url(), connect_timeout=8) as connection:
+            row = connection.execute(
+                "INSERT INTO public.analysis_explanations (id, analysis_id, model_version, input_hash, evidence) "
+                "SELECT %s, id, model_version, input_hash, %s FROM public.analyses "
+                "WHERE id = %s AND model_version = %s AND input_hash = %s RETURNING id",
+                (explanation_id, Jsonb(evidence), analysis_id, result['model_version'], result['input_hash']),
+            ).fetchone()
+            if row is None:
+                raise AnalysisMismatch('Explanation does not match a saved analysis')
+    except (DatabaseUnavailable, AnalysisMismatch):
+        raise
+    except Exception as exc:
+        logger.warning('Explanation storage failed (%s)', type(exc).__name__)
+        raise DatabaseUnavailable('Explanation storage is unavailable') from exc
+
+
 def _database_url() -> str:
     value = os.getenv("DATABASE_URL")
     if not value:
