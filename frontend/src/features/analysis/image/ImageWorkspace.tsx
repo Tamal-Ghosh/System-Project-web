@@ -93,6 +93,7 @@ export function ImageWorkspace({
               <svg className="image-selection-canvas" ref={svg} viewBox={`${image.width * (1 - 1 / zoom) / 2} ${image.height * (1 - 1 / zoom) / 2} ${image.width / zoom} ${image.height / zoom}`} preserveAspectRatio="xMidYMid meet" aria-label="Image region selection canvas" onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerCancel={() => setDraft(null)}>
                 <image href={image.src} width={image.width} height={image.height} />
                 {active && bounds && (active.kind === 'rectangle' ? <rect x={bounds.x} y={bounds.y} width={bounds.width} height={bounds.height} fill="#00968818" stroke="#009688" strokeWidth={2} vectorEffect="non-scaling-stroke" /> : <path d={path} fill="#00968818" stroke="#009688" strokeWidth={2} vectorEffect="non-scaling-stroke" />)}
+                <g id="input-image-segmentation-layer" />
               </svg>
             )}
           </div>

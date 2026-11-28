@@ -6,6 +6,7 @@ import { ErrorBoundary } from './app/ErrorBoundary'
 import { AnalysisSessionProvider } from './features/analysis/AnalysisSession'
 import './styles/index.css'
 import './styles/clinical.css'
+import './features/assistant/assistant.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

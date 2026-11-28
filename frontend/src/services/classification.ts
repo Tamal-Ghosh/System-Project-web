@@ -6,6 +6,7 @@ export interface ClassificationResult {
   metadata: { age: number; sex: string; site: string }
   input_policy: string; tta: boolean; elapsed_ms: number; limitations: string[]
   input_hash: string
+  assistant_access_token?: string | null
   decision_scores?: Record<string, number>
   positive_categories?: string[]
   calibration?: { applied: boolean; temperature: number | null; reason: string; artifact_id?: string }

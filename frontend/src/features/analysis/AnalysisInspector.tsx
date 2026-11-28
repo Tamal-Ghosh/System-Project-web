@@ -1,3 +1,4 @@
+import { ClassificationSummary } from './ClassificationSummary'
 import type { ClassificationResult, ExplanationResponse } from '../../services/classification'
 import { useEffect, useRef, useState } from 'react'
 import { BarChart3, ScanLine, ShieldQuestion, ArrowRight, Info, Fingerprint } from 'lucide-react'
@@ -69,16 +70,10 @@ export function AnalysisInspector({ hasImage, result, image, age, sex, site }: {
     <nav className="inspector-tabs" aria-label="Evidence sections">{tabs.map(({ label, icon: Icon }) => <button type="button" key={label} aria-pressed={tab === label} aria-controls="inspector-content" className={tab === label ? 'selected' : ''} onClick={() => setTab(label)}><Icon size={16} /><span>{label}</span></button>)}</nav>
     <div id="inspector-content" className="inspector-content" aria-label={tab}>
       {tab === 'Classification' && <>
-        <div className="inspector-section-heading"><div className="eyebrow">Model output</div><h2>Classification</h2><p>Start with the result. Inspect the evidence.</p></div>
-        {result ? <div className="classification-results"><h3>{result.leading_class}</h3>
-          <p>Leading model score: {((result.scores.find(item => item.label === result.leading_class)?.score ?? 0)*100).toFixed(1)}%</p>
-          {result.decision_scores && <details><summary>Threshold-mapped decision scores (not probabilities)</summary><p>Independent class thresholds can select multiple categories. These values do not sum to one.</p>{Object.entries(result.decision_scores).map(([label,score]) => <p key={label}>{label}: {score.toFixed(4)}{result.positive_categories?.includes(label) ? ' · above class threshold' : ''}</p>)}</details>}
-          {[...result.scores].sort((a,b) => b.score-a.score).map(item => <div className="class-score" key={item.label}><span>{item.label}</span><progress value={item.score} max={1} aria-label={`${item.label} model score`} /><strong>{(item.score*100).toFixed(1)}%</strong></div>)}
-          <div className="inspector-provenance"><div><span>Model</span><strong>DermFM</strong></div><div><span>Members / TTA</span><strong>{result.ensemble.member_count} / {result.tta ? 'On' : 'Off'}</strong></div><div><span>Storage</span><strong>Not saved</strong></div></div>
-          {result.limitations.map(text => <p className="inspector-disclosure" key={text}><Info size={15} />{text}</p>)}
-        </div> : <><Unavailable icon={BarChart3} title="No classification yet" text={hasImage ? 'Your image is ready for review. Model inference will appear here once the backend is connected.' : 'Add an image on the left to prepare an analysis.'} />
+        <div className="inspector-section-heading"><div className="eyebrow">Prediction review</div><h2>Classification</h2><p>Review the leading result, then explore alternatives.</p></div>
+        {result ? <ClassificationSummary key={result.analysis_id} result={result} /> : <><Unavailable icon={BarChart3} title="No classification yet" text={hasImage ? 'Your image is ready for review. Model inference will appear here once the backend is connected.' : 'Add an image on the left to prepare an analysis.'} />
         <div className="inspector-provenance"><div><span>Model</span><strong>Not connected</strong></div><div><span>Result</span><strong>Not available</strong></div></div></>}
-        <p className="inspector-disclosure"><Info size={15} />Class scores are model outputs, not a confirmed diagnosis.</p>
+        {!result && <p className="inspector-disclosure"><Info size={15} />Class scores are model outputs, not a confirmed diagnosis.</p>}
       </>}
       {tab === 'XAI' && <>
         <div className="inspector-section-heading"><div className="eyebrow">Inspect the basis</div><h2>Explain the prediction</h2><p>Keep the original image in view.</p></div>
@@ -120,6 +115,5 @@ export function AnalysisInspector({ hasImage, result, image, age, sex, site }: {
         <Link className="evidence-link" to="/analysis?module=calibration">Calibration & validation evidence <ArrowRight size={15} /></Link>
       </>}
     </div>
-    <footer className="inspector-footer"><Link to="/analysis?module=calibration">Advanced analysis & model evidence<ArrowRight size={14} /></Link></footer>
   </section>
 }
