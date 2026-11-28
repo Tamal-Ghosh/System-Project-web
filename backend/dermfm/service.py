@@ -9,9 +9,12 @@ import uuid
 import numpy as np
 import torch
 from .loader import CLASSES, load_model, read_checkpoint, load_adapter
-from .preprocessing import prepare_inputs
+from .preprocessing import prepare_inputs, assess_image_quality
 from .metrics import summarize
 from .calibration import load_temperature_calibration
+from .rejection import evaluate_rejection_policy
+from .conformal import evaluate_conformal_prediction
+from .ood import evaluate_ood
 
 @dataclass(frozen=True)
 class Settings:
@@ -74,8 +77,29 @@ class InferenceService:
         averaged = self.calibration.apply(raw_averaged) if self.calibration else raw_averaged
         entropy, margin = summarize(averaged)
         winner = int(averaged.argmax())
+        scores_list = [dict(label=label, score=float(score)) for label, score in zip(CLASSES, averaged)]
+        agreement_val = float(np.mean([int(p.argmax()) == winner for p in members])) if len(members) > 1 else None
+        quality = assess_image_quality(image)
+        ood_result = evaluate_ood(
+            image=image,
+            probabilities=averaged,
+            members=members,
+            metadata=dict(age=age, sex=sex, site=site or "unknown"),
+        )
+        rejection = evaluate_rejection_policy(
+            scores=scores_list,
+            entropy=entropy,
+            margin=margin,
+            agreement=agreement_val,
+            image_quality=quality,
+            ood_result=ood_result,
+        )
         return dict(analysis_id=str(uuid.uuid4()), model_version=self.version, classes=list(CLASSES),
-            leading_class=CLASSES[winner], scores=[dict(label=label, score=float(score)) for label,score in zip(CLASSES,averaged)],
+            leading_class=CLASSES[winner], scores=scores_list,
+            conformal_prediction=evaluate_conformal_prediction(scores_list, coverage=0.95),
+            assessment_status=rejection["status"], rejection=rejection,
+            image_quality=quality,
+            ood=ood_result,
             uncertainty=dict(normalized_entropy=entropy, top_two_margin=margin),
             calibration=(self.calibration.public_summary() if self.calibration else {
                 'applied': False, 'temperature': None,
@@ -91,6 +115,7 @@ class InferenceService:
             limitations=['Single-image adaptation has not been validated against paired-view training.'] +
                 ([] if self.calibration else ['Class scores are not calibrated clinical risk.']) +
                 (['Body site was encoded as unknown.'] if site in ('unknown', '', None) else []),
-            unavailable=['ood', 'image_quality', 'clinical_next_step'],
+            unavailable=['clinical_next_step'],
             capabilities=dict(xai=['integrated_gradients', 'metadata_shapley'],
+                ood='active', image_quality='active',
                 grad_cam='not_implemented', shap='not_implemented', attention='not_implemented'), persistence='not_saved')
