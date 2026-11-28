@@ -16,9 +16,21 @@ from functools import partial
 from pathlib import Path
 from typing import Literal
 from uuid import UUID
-from fastapi import FastAPI, File, Form, HTTPException, Query, Response, UploadFile, BackgroundTasks
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile, BackgroundTasks, Header, Response
+from assistant.sessions import CaseSessions
+from assistant.class_overviews import PostgresClassOverviews, eligible_overview
+from assistant.postgres_storage import PostgresCaseSessions, PostgresChatHistory, AssistantStorageUnavailable, assistant_database_url, storage_health
+from assistant.conversation import route_question, parameter_answer, prediction_answer, reason_answer, case_fact_answer, used_citations
+from assistant.generator import MockAssistantGenerator
+from assistant.gemini import GeminiCaseGenerator, GeminiUnavailable
+from assistant.gemini import GeminiEmbeddings
+from assistant.ingestion import LocalKnowledgeStore
+from assistant.retrieval import HybridRetriever
+from assistant.vector_store import PostgresKnowledgeStore
+from assistant.history import ChatHistory, build_retrieval_query
 from pydantic import BaseModel, Field, field_validator, model_validator
 from starlette.concurrency import run_in_threadpool
+from fastapi.responses import PlainTextResponse, JSONResponse
 from dermfm.preprocessing import MAX_BYTES, decode_image, encode_metadata
 from dermfm.calibration import get_calibration_evidence
 from dermfm.loader import CLASSES
@@ -31,6 +43,7 @@ from database import (
     delete_doctor_assessment,
     list_doctor_assessments,
     list_prescriptions,
+    save_analysis_snapshot,
     update_doctor_assessment,
 )
 from medicine_catalog import MedicineCatalogUnavailable, suggest_medicines
@@ -69,7 +82,8 @@ def _run_xai_sync(service, decoded, age, sex, site, target_class, fold, n_steps,
 
 async def _xai_worker(job_id: str, service, decoded, age: float, sex: str, site: str,
                       target_class: str | None, fold: int | None,
-                      n_steps: int, baseline: str, include_metadata: bool, key: str):
+                      n_steps: int, baseline: str, include_metadata: bool, key: str,
+                      sessions=None, analysis_id=None, case_token=None):
     async with run_lock:
         jobs[job_id].update(status="running", stage="integrated_gradients")
         try:
@@ -80,6 +94,8 @@ async def _xai_worker(job_id: str, service, decoded, age: float, sex: str, site:
                         target_class, fold, n_steps, baseline, include_metadata, job_id)
             )
             if isinstance(result, dict) and result.get("status") == "ok":
+                if sessions is not None and analysis_id:
+                    sessions.attach_explanation(analysis_id, case_token, result)
                 cache[key] = result
                 jobs[job_id].update(status="done", stage="done", result=result)
             elif isinstance(result, dict) and result.get("status") == "unavailable":
@@ -278,10 +294,39 @@ class PrescriptionCreate(BaseModel):
             raise ValueError('Allergy details are required when allergies are present')
         return value
 
+class ChatQuery(BaseModel):
+    analysis_id: UUID
+    question: str = Field(min_length=1, max_length=2000)
+
+    @field_validator('question')
+    @classmethod
+    def nonblank(cls, value):
+        if not value.strip():
+            raise ValueError('Question must not be blank')
+        return value.strip()
+
+
+class ChatFeedback(BaseModel):
+    analysis_id: UUID
+    message_id: UUID
+    rating: Literal['helpful', 'unhelpful']
+
+
 def create_app(service_factory=None):
     def configured_service():
         from dermfm.e55_service import E55Service
         return E55Service(os.environ.get('E55_BUNDLE_PATH', '/opt/models/dermfm'))
+    storage_mode=os.getenv('ASSISTANT_STORAGE','local')
+    if storage_mode not in ('local','postgres'):raise ValueError('Invalid ASSISTANT_STORAGE')
+    online_url=assistant_database_url() if storage_mode=='postgres' else None
+    class_overviews=PostgresClassOverviews(online_url) if online_url else None
+    case_sessions = PostgresCaseSessions(online_url) if online_url else CaseSessions(path=os.getenv('CASE_SESSION_PATH'))
+    provider = os.getenv('ASSISTANT_PROVIDER', 'gemini' if os.getenv('GEMINI_API_KEY') else 'mock')
+    if provider not in ('gemini', 'mock'):
+        raise ValueError('ASSISTANT_PROVIDER must be gemini or mock')
+    generator = GeminiCaseGenerator() if provider == 'gemini' else MockAssistantGenerator()
+    knowledge_path = Path(os.getenv('KNOWLEDGE_PATH', str(Path(__file__).with_name('artifacts') / 'assistant-knowledge.sqlite')))
+    history = PostgresChatHistory(online_url) if online_url else ChatHistory(os.getenv('CHAT_HISTORY_PATH', str(Path(tempfile.gettempdir()) / 'dermascope-chat-history.sqlite')))
     @asynccontextmanager
     async def lifespan(app):
         app.state.service = None
@@ -292,7 +337,26 @@ def create_app(service_factory=None):
         yield
         app.state.service = None
     app = FastAPI(title="DermFM development API", lifespan=lifespan)
+    @app.exception_handler(AssistantStorageUnavailable)
+    async def assistant_storage_failure(request,exc):
+        return JSONResponse(status_code=503,content={'detail':'Online chat storage is temporarily unavailable. Please retry.'})
+
+    @app.get('/api/v1/chat/health')
+    @app.get('/health/assistant')
+    def assistant_health():
+        return storage_health(online_url) if online_url else {'status':'local','storage':'sqlite'}
+
+    from segmentation.routes import segmentation_router
+    app.include_router(segmentation_router())
     gate = threading.Lock()
+    @app.get('/api/v1/model/reference', response_class=PlainTextResponse)
+    def model_reference(version: str = Query(default='e55-multiscale-c769f025f83f3f0f', max_length=100)):
+        if version != 'e55-multiscale-c769f025f83f3f0f':
+            raise HTTPException(404,'Model reference version not available')
+        path=Path(os.getenv('MODEL_REFERENCE_PATH', str(Path(__file__).resolve().parents[1]/'docs'/'assistant-model-reference.md')))
+        if not path.is_file(): raise HTTPException(404,'Model reference is unavailable')
+        return PlainTextResponse(path.read_text(encoding='utf-8'),headers={'Cache-Control':'no-cache'})
+
     @app.get('/api/v1/model/calibration')
     def calibration_evidence():
         service = getattr(app.state, 'service', None)
@@ -417,8 +481,22 @@ def create_app(service_factory=None):
                 if getattr(service, 'requires_clinical', False):
                     try: clinical_image = decode_image(await clinical.read(MAX_BYTES+1)) if clinical is not None else None
                     except ValueError as exc: raise HTTPException(422, str(exc)) from exc
-                    return await run_in_threadpool(service.predict, decoded, age, sex, site, clinical_image)
-                return await run_in_threadpool(service.predict, decoded, age, sex, site)
+                    result = await run_in_threadpool(service.predict, decoded, age, sex, site, clinical_image)
+                else:
+                    result = await run_in_threadpool(service.predict, decoded, age, sex, site)
+                # This unauthenticated API is restricted to local research use.
+                # Persistence must be explicitly enabled after the migration is applied.
+                if os.getenv('ANALYSIS_PERSISTENCE_ENABLED', '').lower() == 'true':
+                    snapshot = {**result, 'persistence': 'saved'}
+                    try:
+                        await run_in_threadpool(save_analysis_snapshot, snapshot)
+                        return {**snapshot, 'assistant_access_token': await run_in_threadpool(case_sessions.register,snapshot)}
+                    except DatabaseUnavailable:
+                        logger.warning('Analysis was not saved')
+                        result = {**result, 'persistence': 'not_saved', 'persistence_reason': 'database_unavailable'}
+                return {**result, 'assistant_access_token': await run_in_threadpool(case_sessions.register,result)}
+            except AssistantStorageUnavailable:
+                return {**result,'assistant_access_token':None,'assistant_status':'storage_unavailable'}
             except HTTPException:
                 raise
             except Exception as exc:
@@ -430,13 +508,100 @@ def create_app(service_factory=None):
                 await clinical.close()
             gate.release()
 
+    @app.post('/api/v1/chat/query')
+    async def chat_query(query: ChatQuery, x_case_token: str = Header(default='', max_length=128)):
+        try:
+            context = await run_in_threadpool(case_sessions.get,str(query.analysis_id),x_case_token)
+        except PermissionError as exc:
+            raise HTTPException(403, str(exc)) from exc
+        conversation = await run_in_threadpool(history.conversation, str(query.analysis_id))
+        citations = []
+        route = route_question(query.question,context,conversation)
+        context = {**context, 'question_intent':route['intent'], 'response_language':route['language'], 'requested_class':route.get('class_label',context['leading_class'])}
+        if route.get('response'):
+            answer = route['response']
+        elif route['intent'] == 'reason' and context.get('xai') is None:
+            answer = reason_answer(context,route['language'])
+        elif route['intent'] == 'parameters':
+            answer = parameter_answer(context,route['language'])
+        elif route['intent']=='prediction':
+            answer = prediction_answer(context,route['language'],route['all_scores'],route['class_label'] if route.get('explicit_class') else None)
+        elif route['intent'] in ('uncertainty','calibration','agreement','limitations'):
+            answer = case_fact_answer(route['intent'],context,route['language'])
+        else:
+            stage='retrieval'
+            try:
+                if provider == 'gemini' and (online_url or knowledge_path.exists() or os.getenv('KNOWLEDGE_DATABASE_URL')):
+                    store = PostgresKnowledgeStore(online_url,schema='assistant') if online_url else (PostgresKnowledgeStore(os.environ['KNOWLEDGE_DATABASE_URL']) if os.getenv('KNOWLEDGE_DATABASE_URL') else LocalKnowledgeStore(knowledge_path))
+                    retriever = HybridRetriever(store, GeminiEmbeddings())
+                    retrieval_question = route['retrieval_question'] if route['intent'] in ('disease','reason') else build_retrieval_query(query.question,conversation)
+                    citations = await run_in_threadpool(retriever.search, retrieval_question, 3, context['model_version'], route['intent'], route.get('class_label'))
+                    context = {**context, 'knowledge_sources': citations}
+                stage='generation'
+                answer = await run_in_threadpool(generator.answer, query.question, context, conversation)
+            except (GeminiUnavailable, ValueError) as exc:
+                # Log only a fixed stage and our sanitized exception message, never case text or prompts.
+                status_match=re.search(r'HTTP (\d{3})',str(exc))
+                logger.warning('Assistant %s failure (%s)',stage,'HTTP '+status_match.group(1) if status_match else type(exc).__name__)
+                overview=await run_in_threadpool(class_overviews.get,route['class_label'],route['language']) if class_overviews and eligible_overview(query.question,route) else None
+                if overview:
+                    answer,citations=overview
+                else:
+                    message=('উত্তর তৈরির service সাময়িকভাবে পাওয়া যাচ্ছে না। আবার চেষ্টা করো। Prediction, uncertainty ও parameters এখনো দেখা যাবে।' if route['language']=='bn' else 'The answer service is temporarily unavailable. Please retry. Prediction, uncertainty and case parameters are still available.')
+                    raise HTTPException(503,message,headers={'Retry-After':'3'}) from exc
+        if answer.get('status')=='unavailable' and class_overviews and eligible_overview(query.question,route):
+            overview=await run_in_threadpool(class_overviews.get,route['class_label'],route['language'])
+            if overview:answer,citations=overview
+        citations = used_citations(answer,citations)
+        response = {**answer, 'analysis_id': str(query.analysis_id), 'provider': provider,
+                'citations': citations, 'model_version': context['model_version'],
+                'input_hash': context['input_hash']}
+        response['message_id'] = await run_in_threadpool(history.add, str(query.analysis_id), query.question, response)
+        return response
+
+    @app.get('/api/v1/chat/case/{analysis_id}')
+    def restore_chat_case(analysis_id: UUID, response: Response, x_case_token: str = Header(default='', max_length=128)):
+        try:
+            context=case_sessions.get(str(analysis_id),x_case_token)
+        except PermissionError as exc:
+            raise HTTPException(403,str(exc)) from exc
+        response.headers['Cache-Control']='no-store'
+        return {**context,'classes':[row['label'] for row in context['scores']], 'elapsed_ms':0,
+                'persistence':context.get('persistence','not_saved')}
+
+    @app.get('/api/v1/chat/history/{analysis_id}')
+    async def chat_history(analysis_id: UUID, response: Response, x_case_token: str = Header(default='', max_length=128)):
+        try:
+            await run_in_threadpool(case_sessions.get,str(analysis_id),x_case_token)
+        except PermissionError as exc:
+            raise HTTPException(403, str(exc)) from exc
+        response.headers['Cache-Control']='no-store'
+        return await run_in_threadpool(history.list, str(analysis_id))
+
+    @app.post('/api/v1/chat/feedback')
+    async def chat_feedback(feedback: ChatFeedback, x_case_token: str = Header(default='', max_length=128)):
+        try:
+            await run_in_threadpool(case_sessions.get,str(feedback.analysis_id),x_case_token)
+            await run_in_threadpool(history.rate, str(feedback.analysis_id), str(feedback.message_id), feedback.rating)
+        except PermissionError as exc:
+            raise HTTPException(403, str(exc)) from exc
+        except LookupError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return {'status': 'saved'}
+
     @app.post('/api/v1/explanations', status_code=202)
     async def explain(bg: BackgroundTasks,
                       image: UploadFile = File(...), age: float = Form(...), sex: str = Form(...),
                       site: str = Form("unknown"), target_class: str = Form(None), fold: int = Form(None),
                       method: str = Form("integrated_gradients"), n_steps: int = Form(5),
-                      baseline: str = Form("blur"), include_metadata: bool = Form(True)):
+                      baseline: str = Form("blur"), include_metadata: bool = Form(True),
+                      analysis_id: UUID | None = Form(None), x_case_token: str = Header(default='')):
         _cleanup_jobs()
+        if analysis_id is not None:
+            try:
+                await run_in_threadpool(case_sessions.get,str(analysis_id),x_case_token)
+            except PermissionError as exc:
+                raise HTTPException(403, str(exc)) from exc
         try:
             encode_metadata(age, sex, site)
         except ValueError as exc:
@@ -471,6 +636,11 @@ def create_app(service_factory=None):
 
         if key in cache:
             cached_result = cache[key]
+            if analysis_id is not None:
+                try:
+                    await run_in_threadpool(case_sessions.attach_explanation,str(analysis_id),x_case_token,cached_result)
+                except ValueError as exc:
+                    raise HTTPException(409, 'Explanation does not match this analysis.') from exc
             jobs[job_id] = {
                 "status": "done",
                 "stage": "done",
@@ -488,6 +658,7 @@ def create_app(service_factory=None):
             _xai_worker,
             job_id, service, decoded, age, sex, site,
             target_class, fold, n_steps, baseline, include_metadata, key,
+            case_sessions, str(analysis_id) if analysis_id is not None else None, x_case_token,
         )
         return {"job_id": job_id, "status": "queued"}
 

@@ -130,6 +130,7 @@ export interface ClassificationResult {
   metadata: { age: number; sex: string; site: string }
   input_policy: string; tta: boolean; elapsed_ms: number; limitations: string[]
   input_hash: string
+  assistant_access_token?: string | null
   image_quality?: ImageQualityDetail
   ood?: OodResult
   decision_scores?: Record<string, number>

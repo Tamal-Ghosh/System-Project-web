@@ -1,0 +1,60 @@
+name: dermascope-chatbot
+services:
+  history-init:
+    image: dermascope-backend:chatbot-dev
+    pull_policy: never
+    user: "0"
+    entrypoint: ["chown", "10001:10001", "/history"]
+    volumes:
+      - chatbot_history:/history
+  knowledge-db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: dermascope_knowledge
+      POSTGRES_USER: dermascope_local
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - chatbot_pgdata:/var/lib/postgresql/data
+      - ./backend/migrations/009_knowledge_vector.sql:/docker-entrypoint-initdb.d/009_knowledge_vector.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dermascope_local -d dermascope_knowledge"]
+      interval: 5s
+      retries: 12
+    # Development only: no database port is published.
+  knowledge-init:
+    image: dermascope-backend:chatbot-dev
+    pull_policy: never
+    entrypoint: ["python", "-m", "assistant.bootstrap_knowledge"]
+    volumes:
+      - ./backend/artifacts/assistant-knowledge.sqlite:/opt/knowledge/assistant-knowledge.sqlite:ro
+    environment:
+      KNOWLEDGE_DATABASE_URL: postgresql://dermascope_local@knowledge-db/dermascope_knowledge
+    depends_on:
+      knowledge-db:
+        condition: service_healthy
+  backend:
+    image: dermascope-backend:chatbot-dev
+    environment:
+      ASSISTANT_STORAGE: local
+      KNOWLEDGE_DATABASE_URL: postgresql://dermascope_local@knowledge-db/dermascope_knowledge
+      KNOWLEDGE_PATH: /opt/knowledge/assistant-knowledge.sqlite
+      CHAT_HISTORY_PATH: /var/lib/dermascope/chat-history.sqlite
+      CASE_SESSION_PATH: /var/lib/dermascope/case-sessions.sqlite
+    volumes:
+      - chatbot_history:/var/lib/dermascope
+      - ./backend/artifacts/assistant-knowledge.sqlite:/opt/knowledge/assistant-knowledge.sqlite:ro
+    depends_on:
+      history-init:
+        condition: service_completed_successfully
+      knowledge-init:
+        condition: service_completed_successfully
+  frontend:
+    image: dermascope-frontend:chatbot-dev
+    ports: !override
+      - "127.0.0.1:5180:5173"
+      # Local compatibility ports: all open the same integrated chatbot stack.
+      - "127.0.0.1:5181:5173"
+      - "127.0.0.1:5182:5173"
+volumes:
+  chatbot_pgdata:
+  chatbot_history:

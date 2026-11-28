@@ -7,6 +7,7 @@ import { AnalysisSessionProvider } from './features/analysis/AnalysisSession'
 import { applyTheme, loadClinicSettings } from './services/settings'
 import './styles/index.css'
 import './styles/clinical.css'
+import './features/assistant/assistant.css'
 
 applyTheme(loadClinicSettings().theme)
 

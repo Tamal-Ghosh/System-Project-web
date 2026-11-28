@@ -26,3 +26,10 @@ COPY --from=model_assets --chown=10001:10001 /source/ /opt/models/dermfm/source/
 USER appuser
 EXPOSE 8000
 CMD ["python", "-m", "uvicorn", "inference_app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+COPY --chown=10001:10001 backend/segmentation ./segmentation
+
+# The API also provides the case-grounded assistant; include it in clean source builds.
+COPY --chown=10001:10001 backend/assistant ./assistant
+ENV MODEL_REFERENCE_PATH=/opt/knowledge/model-reference.md
+COPY docs/assistant-model-reference.md /opt/knowledge/model-reference.md

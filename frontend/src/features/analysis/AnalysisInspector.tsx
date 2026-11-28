@@ -1,3 +1,4 @@
+import { ClassificationSummary } from './ClassificationSummary'
 import type { ClassificationResult, ExplanationResponse } from '../../services/classification'
 import { evaluateConformalSet } from '../../services/classification'
 import { useEffect, useRef, useState } from 'react'
@@ -11,11 +12,8 @@ import {
   Fingerprint,
   AlertTriangle,
   ShieldAlert,
-  Eye,
-  CameraOff,
   Camera,
   Stethoscope,
-  Lock as LockIcon,
   Sun,
   Sparkles,
   Crosshair,
@@ -195,7 +193,6 @@ export function AnalysisInspector({ hasImage, result, image, age, sex, site }: {
   const [startedAt, setStartedAt] = useState(0)
   const [elapsed, setElapsed] = useState(0)
   const [imageUrl, setImageUrl] = useState('')
-  const [overrideActive, setOverrideActive] = useState(false)
   const explanationController = useRef<AbortController | null>(null)
 
   useEffect(() => { if (!image) { setImageUrl(''); return }; const url = URL.createObjectURL(image); setImageUrl(url); return () => URL.revokeObjectURL(url) }, [image])
@@ -204,7 +201,6 @@ export function AnalysisInspector({ hasImage, result, image, age, sex, site }: {
     setExplanation(null)
     setMessage('')
     setTarget(result?.leading_class ?? '')
-    setOverrideActive(false)
     return () => explanationController.current?.abort()
   }, [image, age, sex, site, result])
   const isOodResult = Boolean(result?.ood?.is_ood || result?.rejection?.reasons.includes('OUT_OF_DISTRIBUTION_ANOMALY'))
@@ -268,221 +264,10 @@ export function AnalysisInspector({ hasImage, result, image, age, sex, site }: {
     })}</nav>
     <div id="inspector-content" className="inspector-content" aria-label={tab}>
       {tab === 'Classification' && <>
-        <div className="inspector-section-heading"><div className="eyebrow">Model output</div><h2>Classification</h2><p>Start with the result. Inspect the evidence.</p></div>
-        {result ? (
-          result.assessment_status === 'unable_to_assess' && !overrideActive ? (
-            (() => {
-              const isOod = Boolean(result.rejection?.reasons.includes('OUT_OF_DISTRIBUTION_ANOMALY') || result.ood?.is_ood)
-              const isBlur = Boolean(result.rejection?.reasons.includes('IMAGE_QUALITY_BLURRY') || result.image_quality?.blur_detected)
-              const isMalignant = Boolean(result.rejection?.malignant_risk_flag)
-
-              if (isOod) {
-                return (
-                  <div className="rejection-card rejection-card--danger rejection-card--compact">
-                    <div className="rejection-card-header">
-                      <ShieldAlert size={24} className="rejection-icon rejection-icon--danger" />
-                      <div>
-                        <span className="rejection-pill">Out-of-Domain Image</span>
-                        <h3>Not a Valid Dermoscopic Skin Lesion</h3>
-                        <p>
-                          This image does not belong to the dermoscopic skin lesion domain (OOD Risk: {((result.ood?.ood_score ?? 0) * 100).toFixed(0)}%).
-                          No diagnosis or prediction has been generated.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="rejection-action-box">
-                      <Stethoscope size={18} className="action-icon" />
-                      <div>
-                        <span className="action-tag">What to do:</span>
-                        <strong className="action-title">
-                          Please upload a clear dermoscopic photo of a skin lesion, or examine the patient directly.
-                        </strong>
-                      </div>
-                    </div>
-
-                    <div className="rejection-compact-footer">
-                      <Link to="/analysis?module=ood" className="button button--secondary">
-                        See details <ArrowRight size={14} />
-                      </Link>
-                    </div>
-                  </div>
-                )
-              }
-
-              if (isBlur && !isOod) {
-                return (
-                  <div className="rejection-card rejection-card--blur rejection-card--compact">
-                    <div className="rejection-card-header">
-                      <CameraOff size={22} className="rejection-icon rejection-icon--blur" />
-                      <div>
-                        <span className="rejection-pill">Image Quality Alert</span>
-                        <h3>Blurry / Low Quality Image</h3>
-                        <p>
-                          This photo is too blurry or out of focus to assess reliably
-                          {result.image_quality?.sharpness_score != null ? ` (Sharpness: ${result.image_quality.sharpness_score})` : ''}.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="rejection-action-box">
-                      <Stethoscope size={18} className="action-icon" />
-                      <div>
-                        <span className="action-tag">Recommendation:</span>
-                        <strong className="action-title">
-                          Take a clear, focused photo and try again.
-                          {isMalignant ? ' If it looks suspicious, check in person or consider a biopsy.' : ''}
-                        </strong>
-                      </div>
-                    </div>
-
-                    <div className="rejection-compact-footer">
-                      <button
-                        type="button"
-                        className="button button--secondary override-btn"
-                        onClick={() => setOverrideActive(true)}
-                      >
-                        <Eye size={14} /> View raw scores anyway
-                      </button>
-                    </div>
-                  </div>
-                )
-              }
-
-              const cardClass = isMalignant
-                ? 'rejection-card--malignant'
-                : isOod
-                ? 'rejection-card--danger'
-                : isBlur
-                ? 'rejection-card--blur'
-                : 'rejection-card--uncertain'
-
-              return (
-                <div className={`rejection-card rejection-card--compact ${cardClass}`}>
-                  <div className="rejection-card-header">
-                    {isMalignant || isOod ? (
-                      <ShieldAlert size={22} className="rejection-icon rejection-icon--danger" />
-                    ) : isBlur ? (
-                      <CameraOff size={22} className="rejection-icon rejection-icon--blur" />
-                    ) : (
-                      <AlertTriangle size={22} className="rejection-icon rejection-icon--warning" />
-                    )}
-                    <div>
-                      <span className="rejection-pill">
-                        {isMalignant
-                          ? 'High-Risk Alert'
-                          : isOod
-                          ? 'Unusual Image Alert'
-                          : 'Low Confidence Alert'}
-                      </span>
-                      <h3>
-                        {isMalignant
-                          ? 'Unable to Assess — Possible Cancer Risk'
-                          : isOod
-                          ? 'Unable to Assess — Unusual Input'
-                          : 'Unable to Assess — Unclear Result'}
-                      </h3>
-                      <p>
-                        {isMalignant
-                          ? `Cancer risk is ${((result.rejection?.malignant_metrics.total_malignant_score ?? 0) * 100).toFixed(1)}% (above the 18% safety limit), so the AI cannot safely show a benign result.`
-                          : isOod
-                          ? 'This image does not look like a standard skin lesion photo, so AI results may be unreliable.'
-                          : 'The AI is not confident enough to choose a single diagnosis.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="rejection-action-box">
-                    <Stethoscope size={18} className="action-icon" />
-                    <div>
-                      <span className="action-tag">Recommendation:</span>
-                      <strong className="action-title">
-                        {isMalignant
-                          ? 'Refer to a specialist or consider a biopsy.'
-                          : isOod
-                          ? 'Use a clear, close-up dermoscopy photo of the skin lesion.'
-                          : 'Review in person or get a specialist opinion.'}
-                      </strong>
-                    </div>
-                  </div>
-
-                  <div className="rejection-compact-footer">
-                    <button
-                      type="button"
-                      className="button button--secondary override-btn"
-                      onClick={() => setOverrideActive(true)}
-                      title="Doctor override: view raw model scores (logged)"
-                    >
-                      <Eye size={14} /> View raw scores anyway
-                    </button>
-                  </div>
-                </div>
-              )
-            })()
-          ) : (
-            <div className="classification-results">
-              {result.assessment_status === 'unable_to_assess' && overrideActive && (
-                <div className="override-active-banner">
-                  <ShieldAlert size={18} />
-                  <div className="override-active-text">
-                    <strong>Clinician Override Active:</strong> Displaying raw model projections. The model had withheld an automated diagnosis under safety protocols.
-                  </div>
-                  <button type="button" className="override-dismiss-btn" onClick={() => setOverrideActive(false)}>
-                    <LockIcon size={12} /> Re-enable Protection
-                  </button>
-                </div>
-              )}
-
-              <div className="leading-class-header">
-                <div>
-                  <div className="leading-class-title-row">
-                    <h3>{result.leading_class}</h3>
-                    <span className="leading-class-fullname">
-                      {CLASS_DESCRIPTIONS[result.leading_class]?.name}
-                    </span>
-                    <span className={`category-tag category-tag--${CLASS_DESCRIPTIONS[result.leading_class]?.category.toLowerCase()}`}>
-                      {CLASS_DESCRIPTIONS[result.leading_class]?.category}
-                    </span>
-                  </div>
-                  <p>Leading model score: {((result.scores.find(item => item.label === result.leading_class)?.score ?? 0)*100).toFixed(1)}%</p>
-                </div>
-              </div>
-
-              <div className="class-scores-list">
-                {[...result.scores].sort((a,b) => b.score-a.score).map(item => {
-                  const meta = CLASS_DESCRIPTIONS[item.label]
-                  return (
-                    <div className="class-score" key={item.label}>
-                      <div className="class-score-info">
-                        <div className="class-code-row">
-                          <span className="class-code">{item.label}</span>
-                          {meta && (
-                            <span className={`category-tag category-tag--${meta.category.toLowerCase()}`}>
-                              {meta.category}
-                            </span>
-                          )}
-                        </div>
-                        <span className="class-name">{meta?.name?.split('(')[0].trim() || item.label}</span>
-                      </div>
-                      <progress
-                        value={item.score}
-                        max={1}
-                        className={`progress--${meta?.category.toLowerCase() ?? 'default'}`}
-                        aria-label={`${item.label} model score`}
-                      />
-                      <strong>{(item.score*100).toFixed(1)}%</strong>
-                    </div>
-                  )
-                })}
-              </div>
-
-              <div className="inspector-provenance"><div><span>Model</span><strong>DermFM</strong></div><div><span>Members / TTA</span><strong>{result.ensemble.member_count} / {result.tta ? 'On' : 'Off'}</strong></div><div><span>Storage</span><strong>Not saved</strong></div></div>
-              {result.limitations.map(text => <p className="inspector-disclosure" key={text}><Info size={15} />{text}</p>)}
-            </div>
-          )
-        ) : <><Unavailable icon={BarChart3} title="No classification yet" text={hasImage ? 'Your image is ready for review. Model inference will appear here once the backend is connected.' : 'Add an image on the left to prepare an analysis.'} />
+        <div className="inspector-section-heading"><div className="eyebrow">Prediction review</div><h2>Classification</h2><p>Review the leading result, then explore alternatives.</p></div>
+        {result ? <ClassificationSummary key={result.analysis_id} result={result} /> : <><Unavailable icon={BarChart3} title="No classification yet" text={hasImage ? 'Your image is ready for review. Model inference will appear here once the backend is connected.' : 'Add an image on the left to prepare an analysis.'} />
         <div className="inspector-provenance"><div><span>Model</span><strong>Not connected</strong></div><div><span>Result</span><strong>Not available</strong></div></div></>}
-        <p className="inspector-disclosure"><Info size={15} />Class scores are model outputs, not a confirmed diagnosis.</p>
+        {!result && <p className="inspector-disclosure"><Info size={15} />Class scores are model outputs, not a confirmed diagnosis.</p>}
       </>}
       {tab === 'XAI' && <>
         <div className="inspector-section-heading">

@@ -1,0 +1,14 @@
+# Default chatbot runtime uses the existing online Supabase database.
+# Credentials are supplied only by backend/.env inherited from compose.yaml.
+name: dermascope-chatbot
+services:
+  backend:
+    image: dermascope-backend:chatbot-dev
+    environment:
+      ASSISTANT_STORAGE: postgres
+  frontend:
+    image: dermascope-frontend:chatbot-dev
+    ports: !override
+      - "127.0.0.1:5180:5173"
+      - "127.0.0.1:5181:5173"
+      - "127.0.0.1:5182:5173"

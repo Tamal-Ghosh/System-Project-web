@@ -63,7 +63,7 @@ export function AppShell() {
     <div className="app-main" inert={mobileOpen}>
       <header className="topbar"><div className="topbar-context"><button ref={mobileToggle} className="icon-button mobile-toggle" onClick={() => setMobileOpen(true)} aria-label="Open navigation" aria-expanded={mobileOpen}><Menu size={21} /></button>{current === 'Dashboard' ? <h1 className="dashboard-title">{current}</h1> : <span className="breadcrumb"><strong>{current}</strong></span>}</div><ProfileLink /></header>
       <main id="main-content" tabIndex={-1}><Outlet /></main>
-      <FloatingAssistant key={location.pathname} />
+      <FloatingAssistant />
     </div>
   </div>
 }

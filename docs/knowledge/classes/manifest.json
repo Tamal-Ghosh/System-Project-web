@@ -1,0 +1,90 @@
+[
+  {
+    "path": "docs/knowledge/classes/bcc.md",
+    "title": "Basal cell carcinoma: source-based educational reference",
+    "version": "2026-11-24-BCC",
+    "source_url": "https://www.aad.org/public/diseases/skin-cancer/basal-cell-carcinoma",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  },
+  {
+    "path": "docs/knowledge/classes/akiec.md",
+    "title": "Actinic keratosis and intraepidermal carcinoma: source-based educational reference",
+    "version": "2026-11-24-AKIEC",
+    "source_url": "https://www.cancer.gov/types/skin/hp/skin-treatment-pdq",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  },
+  {
+    "path": "docs/knowledge/classes/sccka.md",
+    "title": "Squamous cell carcinoma and keratoacanthoma: source-based educational reference",
+    "version": "2026-11-24-SCCKA",
+    "source_url": "https://www.cancer.gov/types/skin/hp/skin-treatment-pdq",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  },
+  {
+    "path": "docs/knowledge/classes/mel.md",
+    "title": "Melanoma: source-based educational reference",
+    "version": "2026-11-24-MEL",
+    "source_url": "https://www.cancer.gov/types/skin/patient/melanoma-treatment-pdq",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  },
+  {
+    "path": "docs/knowledge/classes/df.md",
+    "title": "Dermatofibroma: source-based educational reference",
+    "version": "2026-11-24-DF",
+    "source_url": "https://dermnetnz.org/topics/dermatofibroma",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  },
+  {
+    "path": "docs/knowledge/classes/bkl.md",
+    "title": "Benign keratinocytic lesions: source-based educational reference",
+    "version": "2026-11-24-BKL",
+    "source_url": "https://dermnetnz.org/topics/seborrhoeic-keratosis",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  },
+  {
+    "path": "docs/knowledge/classes/nv.md",
+    "title": "Melanocytic nevus: source-based educational reference",
+    "version": "2026-11-24-NV",
+    "source_url": "https://dermnetnz.org/topics/melanocytic-naevus",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  },
+  {
+    "path": "docs/knowledge/classes/ben_oth.md",
+    "title": "Other benign proliferations: source-based educational reference",
+    "version": "2026-11-24-BEN_OTH",
+    "source_url": "https://challenge.isic-archive.com/landing/milk10k/",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  },
+  {
+    "path": "docs/knowledge/classes/inf.md",
+    "title": "Inflammatory and infectious conditions: source-based educational reference",
+    "version": "2026-11-24-INF",
+    "source_url": "https://challenge.isic-archive.com/landing/milk10k/",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  },
+  {
+    "path": "docs/knowledge/classes/mal_oth.md",
+    "title": "Other malignant proliferations: source-based educational reference",
+    "version": "2026-11-24-MAL_OTH",
+    "source_url": "https://challenge.isic-archive.com/landing/milk10k/",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  },
+  {
+    "path": "docs/knowledge/classes/vasc.md",
+    "title": "Vascular lesions: source-based educational reference",
+    "version": "2026-11-24-VASC",
+    "source_url": "https://challenge.isic-archive.com/landing/milk10k/",
+    "license": "Original concise paraphrase; source attribution retained; no source images",
+    "document_type": "clinical_class_summary"
+  }
+]
