@@ -4,6 +4,7 @@ import { useAnalysisSession } from './AnalysisSession'
 import { regionBounds } from './image/geometry'
 import { CalibrationPanel } from './CalibrationEvidence'
 import { CropSensitivityPanel } from './CropSensitivityPanel'
+import { ConformalPredictionPanel } from './ConformalPredictionPanel'
 
 const modules = [
   { id: 'calibration', label: 'Calibration', scope: 'Model-level evidence', description: 'Reliability diagram, expected calibration error and Brier score.', requirement: 'Requires held-out calibration data and an evaluated final inference pipeline.' },
@@ -11,7 +12,7 @@ const modules = [
   { id: 'comparison', label: 'Model comparison', scope: 'Case-level experiment', description: 'Individual model outputs, ensemble results and agreement.', requirement: 'Requires connected model checkpoints and a completed analysis of the selected image.' },
   { id: 'crop', label: 'Crop sensitivity', scope: 'Case-level experiment', description: 'Compare the selected-region prediction with the full-image prediction.', requirement: 'Requires a selected region and a completed classification for that region.' },
   { id: 'stability', label: 'Prediction stability', scope: 'Case-level experiment', description: 'Inspect output changes across explicitly tested image variations.', requirement: 'Requires a connected inference service and a defined transformation protocol.' },
-  { id: 'conformal', label: 'Prediction sets', scope: 'Case-level experiment', description: 'Inspect conformal prediction sets and coverage assumptions.', requirement: 'Requires an evaluated conformal method and appropriate calibration data.' },
+  { id: 'conformal', label: 'Prediction sets', scope: 'Case-level experiment', description: '', requirement: 'Requires an evaluated conformal method and appropriate calibration data.' },
   { id: 'segmentation', label: 'Segmentation', scope: 'Case-level experiment', description: 'Review lesion boundaries and correction history.', requirement: 'Requires a connected segmentation model and evaluated input handling.' },
   { id: 'subgroups', label: 'Subgroup & external', scope: 'Model-level evidence', description: 'Explore subgroup performance and independent validation.', requirement: 'Requires sufficiently supported subgroup results and verified independent evaluation data.' },
 ] as const
@@ -31,7 +32,7 @@ export function AnalysisPage() {
         <span className="module-nav-pill">{isSelected ? 'Active' : ''}</span>
       </button>
     })}</nav>
-      <section id="advanced-content" className="advanced-content" aria-label={module.label}><div className="eyebrow">{module.scope}</div><h2>{module.label}</h2><p className="muted">{module.description}</p>{module.id === 'calibration' ? <CalibrationPanel /> : module.id === 'crop' ? <CropSensitivityPanel /> : <><div className="advanced-unavailable"><BarChart3 size={28} strokeWidth={1.3} /><h3>No measured output available</h3><p>{module.requirement}</p><span className="unavailable-tag">Not connected</span></div><p className="inspector-disclosure"><Info size={15} />{module.scope === 'Model-level evidence' ? 'These results describe model evaluation; they are not a diagnosis for the current image.' : 'Case experiments use the selected image context; no experiment or clinical measurement has run.'}</p></>}</section>
+      <section id="advanced-content" className="advanced-content" aria-label={module.label}><h2>{module.label}</h2>{module.description && <p className="muted">{module.description}</p>}{module.id === 'calibration' ? <CalibrationPanel /> : module.id === 'crop' ? <CropSensitivityPanel /> : module.id === 'conformal' ? <ConformalPredictionPanel /> : <><div className="advanced-unavailable"><BarChart3 size={28} strokeWidth={1.3} /><h3>No measured output available</h3><p>{module.requirement}</p><span className="unavailable-tag">Not connected</span></div><p className="inspector-disclosure"><Info size={15} />{module.scope === 'Model-level evidence' ? 'These results describe model evaluation; they are not a diagnosis for the current image.' : 'Case experiments use the selected image context; no experiment or clinical measurement has run.'}</p></>}</section>
     </div>
   </div>
 }

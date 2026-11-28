@@ -10,6 +10,7 @@ import uuid
 from .loader import CLASSES, SITES
 from .metrics import summarize
 from .calibration import load_temperature_calibration
+from .conformal import evaluate_conformal_prediction
 
 
 class E55Service:
@@ -53,9 +54,11 @@ class E55Service:
             tensor = self.predictor.transform(value.convert('RGB'))
             digest.update(tensor.contiguous().numpy().tobytes())
         digest.update(json.dumps({'age':age,'sex':sex,'site':site}, sort_keys=True).encode())
+        scores_list = [dict(label=label,score=value) for label,value in zip(CLASSES,scores)]
         return dict(analysis_id=str(uuid.uuid4()), model_version=self.version,
             classes=list(CLASSES), leading_class=CLASSES[max(range(len(scores)), key=scores.__getitem__)],
-            scores=[dict(label=label,score=value) for label,value in zip(CLASSES,scores)],
+            scores=scores_list,
+            conformal_prediction=evaluate_conformal_prediction(scores_list, coverage=0.95),
             decision_scores=raw['decision_scores'], positive_categories=raw['positive_categories'],
             uncertainty=dict(normalized_entropy=entropy, top_two_margin=margin),
             calibration=(calibration.public_summary() if calibration else dict(applied=False, temperature=None, reason='No validated temperature artifact is configured for this exact model and input policy.')),

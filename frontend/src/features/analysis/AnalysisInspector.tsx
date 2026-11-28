@@ -679,6 +679,7 @@ export function AnalysisInspector({ hasImage, result, image, age, sex, site }: {
             </div>
           </div>
         )}
+        <Link className="evidence-link" to="/analysis?module=conformal">Prediction sets (Advanced Analysis) <ArrowRight size={15} /></Link>
       </>}
     </div>
   </section>
