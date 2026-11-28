@@ -5,8 +5,6 @@ import {
   CheckCircle2,
   ClipboardCheck,
   Database,
-  Download,
-  FileDown,
   Info,
   ShieldAlert,
   ShieldCheck,
@@ -500,27 +498,6 @@ export function SubgroupPerformancePanel() {
 
   const ageShort = patientAgeGroup.includes('>') ? '> 65 yrs' : patientAgeGroup.includes('<') ? '< 40 yrs' : '40–65 yrs'
 
-  function exportCSV() {
-    const isLow = Boolean(matchedSiteData.low_sample || matchedAgeData?.low_sample || matchedGenderData?.low_sample)
-    const siteAcc = ((matchedSiteData.metrics?.mel_sensitivity?.value ?? 0.84) * 100).toFixed(1)
-    const ageAcc = ((matchedAgeData?.metrics?.mel_sensitivity?.value ?? 0.84) * 100).toFixed(1)
-    const genderAcc = ((matchedGenderData?.metrics?.mel_sensitivity?.value ?? 0.84) * 100).toFixed(1)
-    const rows = [
-      ['Category', 'Patient Value', 'Tested Cases (N)', 'Detection / Accuracy', 'Data Reliability', 'Doctor Action Recommendation'],
-      ['Patient Age Cohort', ageShort, String(matchedAgeData?.n || ''), `${ageAcc}%`, matchedAgeData?.low_sample ? 'Limited Data' : 'High Reliability', matchedAgeData?.low_sample ? 'Extra vigilance' : 'Standard clinical protocol'],
-      ['Biological Sex', patientGender, String(matchedGenderData?.n || ''), `${genderAcc}%`, matchedGenderData?.low_sample ? 'Limited Data' : 'High Reliability', 'Standard clinical protocol'],
-      ['Lesion Anatomical Site', matchedSiteData.subgroup, String(matchedSiteData.n), `${siteAcc}%`, isLow ? 'Caution: Limited Data' : 'High Reliability', isLow ? 'Do NOT trust Benign result alone. Perform dermoscopy and biopsy if suspicious.' : 'Safe supportive second opinion alongside routine examination.'],
-    ]
-    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map(e => e.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n')
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `patient_reliability_${patientSite.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${patientGender.toLowerCase()}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
-
   return (
     <div className="subgroup-audit-panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* 1. Quick Patient Check Inputs Card */}
@@ -837,170 +814,6 @@ export function SubgroupPerformancePanel() {
           <div className="kpi-doctor-note">
             <strong>Meaning:</strong> Accuracy remains steady between men, women, and major body locations.
           </div>
-        </div>
-      </div>
-
-      {/* 4. Short, Easy & Understandable Location Reliability Matrix */}
-      <div className="short-matrix-card" style={{
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '10px',
-        padding: '20px 22px',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
-        pageBreakInside: 'avoid',
-        breakInside: 'avoid',
-      }}>
-        <div style={{ marginBottom: '16px' }}>
-          <h4 style={{ margin: 0, fontSize: '16.5px', fontWeight: 700, color: '#0f172a' }}>
-            Location Reliability Matrix
-          </h4>
-        </div>
-
-        <div style={{
-          width: '100%',
-          overflowX: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          paddingBottom: '4px',
-        }}>
-          <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', fontSize: '13.5px' }}>
-            <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
-                <th style={{ padding: '12px 14px', color: '#1e293b', fontWeight: 700 }}>Body Location</th>
-                <th style={{ padding: '12px 14px', color: '#1e293b', fontWeight: 700 }}>AI Status (কী অবস্থা)</th>
-                <th style={{ padding: '12px 14px', color: '#1e293b', fontWeight: 700 }}>Reason (কেন এমন)</th>
-                <th style={{ padding: '12px 14px', color: '#1e293b', fontWeight: 700 }}>Doctor Action (কী করা উচিত)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {siteList.map((item) => {
-                const isSelected = item.subgroup.toLowerCase().includes(patientSite.toLowerCase())
-                const isLow = item.low_sample
-                return (
-                  <tr
-                    key={item.subgroup}
-                    style={{
-                      borderBottom: '1px solid #f1f5f9',
-                      background: isSelected ? '#f0fdfa' : 'transparent',
-                    }}
-                  >
-                    <td style={{ padding: '12px 14px', fontWeight: 650, color: '#0f172a' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>{item.subgroup}</span>
-                        {isSelected && (
-                          <span style={{ fontSize: '11px', background: '#008579', color: '#ffffff', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
-                            Selected
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td style={{ padding: '12px 14px' }}>
-                      {isLow ? (
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          background: '#fef3c7',
-                          color: '#b45309',
-                          padding: '4px 10px',
-                          borderRadius: '5px',
-                          fontWeight: 700,
-                          fontSize: '12px',
-                        }}>
-                          <AlertTriangle size={13} />
-                          Caution: Limited Data
-                        </span>
-                      ) : (
-                        <span style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          background: '#dcfce7',
-                          color: '#15803d',
-                          padding: '4px 10px',
-                          borderRadius: '5px',
-                          fontWeight: 700,
-                          fontSize: '12px',
-                        }}>
-                          <CheckCircle2 size={13} />
-                          High Reliability
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ padding: '12px 14px', color: '#334155', lineHeight: 1.5 }}>
-                      {isLow
-                        ? `Only ${item.n} cases tested (very few sample images)`
-                        : `Tested on ${item.n} patient cases (sufficient sample size)`}
-                    </td>
-                    <td style={{ padding: '12px 14px', color: isLow ? '#92400e' : '#0f172a', fontWeight: isLow ? 650 : 500, lineHeight: 1.5 }}>
-                      {isLow
-                        ? 'Do NOT trust AI "Benign" score alone. Perform dermoscopy & biopsy.'
-                        : 'Safe to use as supportive decision advice alongside routine examination.'}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Buttons directly below the matrix table on the left side */}
-        <div className="no-print" style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          gap: '14px',
-          marginTop: '18px',
-          paddingTop: '16px',
-          borderTop: '1px solid #f1f5f9',
-          flexWrap: 'wrap',
-        }}>
-          <button
-            type="button"
-            onClick={exportCSV}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '14px',
-              fontWeight: 650,
-              padding: '10px 18px',
-              borderRadius: '8px',
-              background: '#f0fdfa',
-              color: '#0f766e',
-              border: '1.5px solid #008579',
-              cursor: 'pointer',
-              boxShadow: '0 1px 3px rgba(0,133,121,0.08)',
-              transition: 'all 0.15s ease',
-            }}
-            title="Download patient reliability data as CSV file"
-          >
-            <Download size={16} />
-            Export Patient Report (CSV)
-          </button>
-
-          <button
-            type="button"
-            onClick={() => window.print()}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '14px',
-              fontWeight: 650,
-              padding: '10px 20px',
-              borderRadius: '8px',
-              background: '#008579',
-              color: '#ffffff',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(0,133,121,0.2)',
-              transition: 'all 0.15s ease',
-            }}
-            title="Export or print clinical guidance summary as clean PDF"
-          >
-            <FileDown size={16} />
-            Export Summary (Print / PDF)
-          </button>
         </div>
       </div>
     </div>

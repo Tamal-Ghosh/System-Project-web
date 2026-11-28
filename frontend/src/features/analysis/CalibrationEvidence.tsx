@@ -31,7 +31,7 @@ function ReliabilityDiagram({ evidence }: { evidence: Evidence }) {
   </div>
 }
 
-export function CalibrationPanel() {
+export function CalibrationPanel({ hideLimitations = false }: { hideLimitations?: boolean } = {}) {
   const [evidence, setEvidence] = useState<Evidence | null>(null)
   const [error, setError] = useState('')
 
@@ -60,6 +60,8 @@ export function CalibrationPanel() {
         {evidence.temperature_scaling.applied && <div className="temperature-notice temperature-notice--active"><CheckCircle2 size={18} /><div><strong>Temperature scaling active</strong><p>{evidence.temperature_scaling.reason}</p></div></div>}
       </div>
     </div>
-    <div className="calibration-limitations"><h3>Interpret with care</h3><ul>{evidence.limitations.map(item => <li key={item}>{item}</li>)}</ul></div>
+    {!hideLimitations && (
+      <div className="calibration-limitations"><h3>Interpret with care</h3><ul>{evidence.limitations.map(item => <li key={item}>{item}</li>)}</ul></div>
+    )}
   </div>
 }

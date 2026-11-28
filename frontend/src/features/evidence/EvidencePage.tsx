@@ -1,10 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import {
   Activity,
-  CheckCircle2,
   FileSpreadsheet,
-  Info,
-  Printer,
   ShieldCheck,
   Users,
 } from 'lucide-react'
@@ -40,64 +37,13 @@ export function EvidencePage() {
   }
 
   return (
-    <div className="model-validation-page" style={{ padding: '24px 28px', maxWidth: '1280px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="model-validation-page" style={{ padding: '24px 28px', maxWidth: '1280px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* Header Row */}
-      <div className="clinical-page-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+      <div className="clinical-page-heading" style={{ margin: 0, paddingBottom: '4px' }}>
         <div>
-          <div className="eyebrow" style={{ fontSize: '12px', fontWeight: 700, color: '#008579', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Model-Level Evidence
-          </div>
-          <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#0f172a', margin: '4px 0 6px' }}>
+          <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
             Model Evidence
           </h1>
-          <p className="muted" style={{ fontSize: '14.5px', color: '#64748b', margin: 0, maxWidth: '780px', lineHeight: 1.5 }}>
-            Empirical validation metrics across multi-source clinical cohorts, demographic fairness across anatomical locations and age cohorts, and model calibration reliability.
-          </p>
-        </div>
-
-        <div className="page-actions no-print" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button
-            type="button"
-            className="theme-export-btn"
-            onClick={() => window.print()}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-          >
-            <Printer size={16} />
-            <span>Print Clinical Audit</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Overview Metadata Bar */}
-      <div className="evidence-overview-bar" style={{
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
-        borderRadius: '10px',
-        padding: '12px 18px',
-        display: 'flex',
-        flexWrap: 'wrap',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '12px',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <span className="evidence-overview-badge" style={{ background: '#eaf8f5', color: '#007d72', padding: '3px 10px', borderRadius: '6px', fontSize: '12.5px', fontWeight: 700 }}>
-            DermaInsight E38 Clinical System
-          </span>
-          <span style={{ fontSize: '13px', color: '#64748b' }}>•</span>
-          <span style={{ fontSize: '13px', color: '#334155', fontWeight: 600 }}>
-            Evaluation Cohort: 1,200 Held-Out Cases
-          </span>
-          <span style={{ fontSize: '13px', color: '#64748b' }}>•</span>
-          <span style={{ fontSize: '13px', color: '#047857', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            <CheckCircle2 size={14} /> Multi-Center Benchmark
-          </span>
-        </div>
-
-        <div className="evidence-overview-disclaimer" style={{ fontSize: '12.5px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Info size={14} style={{ color: '#008579' }} />
-          <span>Model-level evidence assesses overall population accuracy; not individual patient diagnosis.</span>
         </div>
       </div>
 
@@ -110,11 +56,19 @@ export function EvidencePage() {
         boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
       }}>
         {/* Navigation Tabs Header */}
-        <nav className="inspector-tabs no-print" aria-label="Model evidence sections" style={{
-          background: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
-          padding: '0 16px',
-        }}>
+        <nav
+          className="no-print"
+          aria-label="Model evidence sections"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            gap: '32px',
+            background: '#ffffff',
+            borderBottom: '1px solid #e2e8f0',
+            padding: '0 24px',
+          }}
+        >
           {EVIDENCE_TABS.map(({ id, label, icon: Icon }) => {
             const isSelected = activeTab === id
             return (
@@ -123,10 +77,25 @@ export function EvidencePage() {
                 key={id}
                 aria-pressed={isSelected}
                 aria-controls="evidence-content"
-                className={isSelected ? 'selected' : ''}
                 onClick={() => setTab(id)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '14px 4px',
+                  minHeight: '48px',
+                  border: 'none',
+                  borderBottom: isSelected ? '2.5px solid #008d80' : '2.5px solid transparent',
+                  background: 'none',
+                  fontSize: '14.5px',
+                  fontWeight: isSelected ? 650 : 500,
+                  color: isSelected ? '#007d72' : '#59708b',
+                  cursor: 'pointer',
+                  flex: 'none',
+                  transition: 'color 0.15s ease, border-color 0.15s ease',
+                }}
               >
-                <Icon size={16} />
+                <Icon size={16} strokeWidth={isSelected ? 2 : 1.7} />
                 <span>{label}</span>
               </button>
             )
@@ -134,22 +103,15 @@ export function EvidencePage() {
         </nav>
 
         {/* Tab Content Area */}
-        <div id="evidence-content" className="evidence-tab-content" style={{ padding: '24px' }}>
+        <div id="evidence-content" className="evidence-tab-content" style={{ padding: '22px' }}>
           {activeTab === 'calibration' && (
             <div>
-              <div className="evidence-tab-subtitle" style={{ marginBottom: '18px', fontSize: '14px', color: '#64748b' }}>
-                Reliability diagram, expected calibration error (ECE) and Brier score evaluated on held-out calibration folds.
-              </div>
-              <CalibrationPanel />
+              <CalibrationPanel hideLimitations={true} />
             </div>
           )}
 
           {activeTab === 'validation' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-              <div className="evidence-tab-subtitle" style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
-                Class-wise performance, benchmark dataset details, sample counts, and documented limitations.
-              </div>
-
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* KPI Performance Highlights */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                 <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
@@ -188,9 +150,6 @@ export function EvidencePage() {
                       Diagnostic Class Sensitivity &amp; Test Volume (N=1,200)
                     </h4>
                   </div>
-                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>
-                    Held-Out Test Set Performance
-                  </span>
                 </div>
 
                 <div style={{ overflowX: 'auto' }}>
@@ -232,37 +191,11 @@ export function EvidencePage() {
                   </table>
                 </div>
               </div>
-
-              {/* Evaluation Provenance & Limitation Notice */}
-              <div style={{
-                background: '#fffbeb',
-                border: '1px solid #fde68a',
-                borderRadius: '8px',
-                padding: '16px 18px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Info size={18} style={{ color: '#b45309' }} />
-                  <strong style={{ fontSize: '14px', color: '#92400e' }}>
-                    Documented Limitations &amp; Clinical Scope
-                  </strong>
-                </div>
-                <ul style={{ margin: '4px 0 0 16px', padding: 0, fontSize: '13px', color: '#78350f', lineHeight: 1.6 }}>
-                  <li><strong>OOF Evidence:</strong> Model-level metrics reflect out-of-fold cross-validation on multi-center dermoscopy datasets (ISIC, HAM10000, BCN20000).</li>
-                  <li><strong>Non-Cutaneous Exclusion:</strong> The model has NOT been evaluated on subungual, mucosal, or ocular lesions.</li>
-                  <li><strong>Supportive Tool:</strong> Model evidence does not estimate the diagnostic correctness of an isolated uploaded lesion image and does not replace histopathological confirmation.</li>
-                </ul>
-              </div>
             </div>
           )}
 
           {activeTab === 'subgroups' && (
             <div>
-              <div className="evidence-tab-subtitle" style={{ marginBottom: '18px', fontSize: '14px', color: '#64748b' }}>
-                Explore subgroup performance, demographic fairness, and independent validation across anatomical lesion sites and age brackets.
-              </div>
               <SubgroupPerformancePanel />
             </div>
           )}
