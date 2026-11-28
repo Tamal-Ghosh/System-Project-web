@@ -81,21 +81,21 @@ export function EvidencePage() {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  padding: '14px 4px',
-                  minHeight: '48px',
+                  gap: '9px',
+                  padding: '16px 6px',
+                  minHeight: '52px',
                   border: 'none',
-                  borderBottom: isSelected ? '2.5px solid #008d80' : '2.5px solid transparent',
+                  borderBottom: isSelected ? '3px solid #008d80' : '3px solid transparent',
                   background: 'none',
-                  fontSize: '14.5px',
-                  fontWeight: isSelected ? 650 : 500,
+                  fontSize: '16.5px',
+                  fontWeight: isSelected ? 700 : 550,
                   color: isSelected ? '#007d72' : '#59708b',
                   cursor: 'pointer',
                   flex: 'none',
                   transition: 'color 0.15s ease, border-color 0.15s ease',
                 }}
               >
-                <Icon size={16} strokeWidth={isSelected ? 2 : 1.7} />
+                <Icon size={18} strokeWidth={isSelected ? 2.1 : 1.8} />
                 <span>{label}</span>
               </button>
             )
@@ -112,27 +112,70 @@ export function EvidencePage() {
 
           {activeTab === 'validation' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* KPI Performance Highlights */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
-                <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Balanced Accuracy</span>
-                  <strong style={{ display: 'block', fontSize: '20px', color: '#0f172a', margin: '4px 0 2px' }}>84.15%</strong>
-                  <span style={{ fontSize: '11.5px', color: '#64748b' }}>95% CI: [80.62%, 87.97%]</span>
+              {/* KPI Performance Highlights (2x2 grid, larger size) */}
+              <div className="subgroup-kpi-grid" style={{ gap: '18px' }}>
+                <div style={{
+                  background: '#f8fafc',
+                  padding: '22px 24px',
+                  borderRadius: '10px',
+                  border: '1px solid #e2e8f0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  minHeight: '115px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                }}>
+                  <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>Balanced Accuracy</span>
+                  <strong style={{ display: 'block', fontSize: '26px', color: '#0f172a', margin: '6px 0 4px', fontWeight: 750 }}>84.15%</strong>
+                  <span style={{ fontSize: '12.5px', color: '#64748b' }}>95% CI: [80.62%, 87.97%]</span>
                 </div>
-                <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Macro ROC-AUC</span>
-                  <strong style={{ display: 'block', fontSize: '20px', color: '#0f172a', margin: '4px 0 2px' }}>90.89%</strong>
-                  <span style={{ fontSize: '11.5px', color: '#64748b' }}>95% CI: [89.08%, 92.55%]</span>
+
+                <div style={{
+                  background: '#f8fafc',
+                  padding: '22px 24px',
+                  borderRadius: '10px',
+                  border: '1px solid #e2e8f0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  minHeight: '115px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                }}>
+                  <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>Macro ROC-AUC</span>
+                  <strong style={{ display: 'block', fontSize: '26px', color: '#0f172a', margin: '6px 0 4px', fontWeight: 750 }}>90.89%</strong>
+                  <span style={{ fontSize: '12.5px', color: '#64748b' }}>95% CI: [89.08%, 92.55%]</span>
                 </div>
-                <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Melanoma (MEL) Sensitivity</span>
-                  <strong style={{ display: 'block', fontSize: '20px', color: '#047857', margin: '4px 0 2px' }}>84.38%</strong>
-                  <span style={{ fontSize: '11.5px', color: '#64748b' }}>Critical Malignancy Target</span>
+
+                <div style={{
+                  background: '#f8fafc',
+                  padding: '22px 24px',
+                  borderRadius: '10px',
+                  border: '1px solid #e2e8f0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  minHeight: '115px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                }}>
+                  <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>Melanoma (MEL) Sensitivity</span>
+                  <strong style={{ display: 'block', fontSize: '26px', color: '#047857', margin: '6px 0 4px', fontWeight: 750 }}>84.38%</strong>
+                  <span style={{ fontSize: '12.5px', color: '#64748b' }}>Critical Malignancy Target</span>
                 </div>
-                <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Basal Cell (BCC) Sensitivity</span>
-                  <strong style={{ display: 'block', fontSize: '20px', color: '#047857', margin: '4px 0 2px' }}>86.54%</strong>
-                  <span style={{ fontSize: '11.5px', color: '#64748b' }}>High Clinical Concordance</span>
+
+                <div style={{
+                  background: '#f8fafc',
+                  padding: '22px 24px',
+                  borderRadius: '10px',
+                  border: '1px solid #e2e8f0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  minHeight: '115px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                }}>
+                  <span style={{ fontSize: '14px', color: '#64748b', fontWeight: 600 }}>Basal Cell (BCC) Sensitivity</span>
+                  <strong style={{ display: 'block', fontSize: '26px', color: '#047857', margin: '6px 0 4px', fontWeight: 750 }}>86.54%</strong>
+                  <span style={{ fontSize: '12.5px', color: '#64748b' }}>High Clinical Concordance</span>
                 </div>
               </div>
 
