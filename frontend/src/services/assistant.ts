@@ -57,3 +57,7 @@ export async function rateAssistant(result: ClassificationResult, messageId: str
   const response = await fetch('/api/v1/chat/feedback', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Case-Token': result.assistant_access_token ?? ''}, body: JSON.stringify({analysis_id: result.analysis_id, message_id: messageId, rating})})
   if (!response.ok) throw new Error('Feedback could not be saved.')
 }
+
+export function forgetAssistantCase() {
+  try { sessionStorage.removeItem(sessionKey) } catch { /* Browser storage may be disabled. */ }
+}
