@@ -1,0 +1,1 @@
+case_id,image_type,anatomical_site,reference_mask,predicted_mask,true_class,original_class,manual_roi_class,segmentation_crop_class,prompt_seconds,review_seconds,manual_trace_seconds
